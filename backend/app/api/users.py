@@ -7,7 +7,7 @@ from backend.app.schemas.user import UserResponse, UserStatsResponse
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-MAX_LIMIT = 100
+MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
 
 

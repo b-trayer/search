@@ -45,7 +45,6 @@ export default function SearchContent({
               totalResults={stats.totalResults}
               avgCTR={stats.avgCTR}
               impressions={stats.impressions}
-              avgTime={stats.avgTime}
               isVisible={true}
             />
 

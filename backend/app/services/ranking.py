@@ -9,15 +9,46 @@ from backend.app.core.preferences import (
 )
 
 
+def fix_catalog_url(url: str) -> str:
+    if not url:
+        return ''
+    url = url.replace('\\\\', '%5C').replace('\\', '%5C')
+    if 'ruslan-neo.nsu.ru/pwb/action/rec?id=' in url:
+        url = url.replace('/pwb/action/rec?id=', '/pwb/detail?db=BOOKS&id=')
+    return url
+
+
+def get_authors_str(doc: Dict) -> str:
+    authors = doc.get('authors', [])
+    if isinstance(authors, list):
+        return ', '.join(authors)
+    return str(authors) if authors else ''
+
+
+def get_subjects_str(doc: Dict) -> str:
+    subjects = doc.get('subjects', [])
+    if isinstance(subjects, list):
+        return ', '.join(subjects)
+    return str(subjects) if subjects else ''
+
+
 def calculate_f_type_for_doc(doc: Dict, user_profile: Dict) -> float:
     role = user_profile.get("role", "")
     if not role:
         return 0.0
 
-    collection = doc.get('коллекция', '') or ''
-    doc_type = infer_document_type(collection)
+    collection = doc.get('collection', '') or doc.get('коллекция', '') or ''
+    doc_type_field = doc.get('document_type', '')
+    doc_type = doc_type_field if doc_type_field else infer_document_type(collection)
 
     return calculate_f_type(doc_type, role)
+
+
+def get_title_str(doc: Dict) -> str:
+    title = doc.get('title', '')
+    if isinstance(title, list):
+        return title[0] if title else ''
+    return str(title) if title else ''
 
 
 def calculate_f_topic_for_doc(doc: Dict, user_profile: Dict) -> float:
@@ -25,9 +56,10 @@ def calculate_f_topic_for_doc(doc: Dict, user_profile: Dict) -> float:
     interests = user_profile.get("interests", [])
 
     doc_subjects = [
-        doc.get('литература_по_отраслям_знания', '') or '',
-        doc.get('коллекция', '') or '',
-        doc.get('title', '') or '',
+        get_subjects_str(doc),
+        doc.get('knowledge_area', '') or '',
+        doc.get('collection', '') or doc.get('коллекция', '') or '',
+        get_title_str(doc),
     ]
 
     return calculate_f_topic(doc_subjects, specialization, interests)
@@ -61,26 +93,35 @@ def apply_ranking_formula(
         ctr_factor = 0.0
         smoothed_ctr = 0.0
 
+        doc_clicks = 0
+        doc_impressions = 0
         if document_id in ctr_data:
-            clicks, impressions = ctr_data[document_id]
-            smoothed_ctr = bayesian_smoothed_ctr(clicks, impressions, weights)
+            doc_clicks, doc_impressions = ctr_data[document_id]
+            smoothed_ctr = bayesian_smoothed_ctr(doc_clicks, doc_impressions, weights)
             if smoothed_ctr > 0:
                 ctr_factor = math.log(1 + smoothed_ctr * 10)
 
         final_score = log_bm25 + weights.w_user * f_user + weights.beta_ctr * ctr_factor
 
+        # Get subjects as list
+        subjects_raw = doc.get('subjects', [])
+        subjects_list = subjects_raw if isinstance(subjects_raw, list) else []
+
         result = {
             "document_id": document_id,
-            "title": doc.get('title', 'Без названия'),
-            "authors": doc.get('авторы', doc.get('другие_авторы', '')),
-            "url": doc.get('url', ''),
-            "cover": doc.get('cover', ''),
-            "collection": doc.get('коллекция', ''),
-            "subject_area": doc.get('литература_по_отраслям_знания', ''),
-            "organization": doc.get('организация', ''),
-            "publication_info": doc.get('выходные_сведения', ''),
-            "language": doc.get('язык', ''),
+            "title": doc.get('title', 'Без названия') if isinstance(doc.get('title'), str) else (doc.get('title', ['Без названия'])[0] if doc.get('title') else 'Без названия'),
+            "authors": get_authors_str(doc),
+            "url": fix_catalog_url(doc.get('read_url', '') or doc.get('card_url', '') or doc.get('url', '') or ''),
+            "cover": doc.get('cover_url', '') or doc.get('cover', ''),
+            "collection": doc.get('collection', '') or doc.get('коллекция', ''),
+            "subject_area": get_subjects_str(doc) or doc.get('knowledge_area', ''),
+            "subjects": subjects_list,
+            "organization": doc.get('organization', '') or doc.get('организация', ''),
+            "publication_info": doc.get('publication_info', '') or doc.get('выходные_сведения', ''),
+            "language": doc.get('language', '') or doc.get('язык', ''),
             "source": doc.get('source', ''),
+            "year": doc.get('year'),
+            "document_type": doc.get('document_type', ''),
 
             "base_score": round(bm25_score, 3),
             "log_bm25": round(log_bm25, 3),
@@ -92,7 +133,9 @@ def apply_ranking_formula(
             "ctr_boost": round(1 + ctr_factor, 3),
             "final_score": round(final_score, 3),
             "position": i + 1,
-            "highlights": hit.get('highlight', {})
+            "highlights": hit.get('highlight', {}),
+            "clicks": doc_clicks,
+            "impressions": doc_impressions,
         }
 
         results.append(result)

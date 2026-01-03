@@ -34,10 +34,13 @@ export interface DocumentResult {
   cover: string;
   collection: string;
   subject_area: string;
+  subjects: string[];
   organization: string;
   publication_info: string;
   language: string;
   source: string;
+  year: number | null;
+  document_type: string;
 
   base_score: number;
   log_bm25: number;
@@ -50,6 +53,8 @@ export interface DocumentResult {
   final_score: number;
   position: number;
   highlights: Record<string, string[]>;
+  clicks: number;
+  impressions: number;
 }
 
 export interface SearchResponse {
@@ -64,7 +69,6 @@ export interface SearchStats {
   totalResults: number;
   avgCTR: number;
   impressions: number;
-  avgTime: number;
 }
 
 

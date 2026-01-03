@@ -1,6 +1,6 @@
 
-import { useState, useCallback } from 'react';
-import { searchDocuments, registerClick, ApiError } from '@/lib/api';
+import { useState, useCallback, useEffect } from 'react';
+import { searchDocuments, registerClick, getSearchStats, registerImpressions, ApiError } from '@/lib/api';
 import type { DocumentResult, UserProfile, SearchStats, SearchFilters } from '@/lib/types';
 
 interface UseSearchOptions {
@@ -33,7 +33,6 @@ const DEFAULT_STATS: SearchStats = {
   totalResults: 0,
   avgCTR: 0,
   impressions: 0,
-  avgTime: 0,
 };
 
 export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
@@ -50,6 +49,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isRetryable, setIsRetryable] = useState(false);
+  const [totalImpressions, setTotalImpressions] = useState(0);
 
 
   const [lastSearchParams, setLastSearchParams] = useState<{
@@ -57,6 +57,16 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     enablePersonalization: boolean;
     filters?: SearchFilters;
   } | null>(null);
+
+  useEffect(() => {
+    getSearchStats()
+      .then((data) => {
+        setTotalImpressions(data.total_impressions);
+      })
+      .catch(() => {
+        // Ignore errors for stats
+      });
+  }, []);
 
   const search = useCallback(async (
     userId?: number,
@@ -92,11 +102,24 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
         ? response.results.reduce((acc, d) => acc + (d.ctr_boost - 1), 0) / response.results.length * 100
         : 0;
 
+      // Register impressions and update count
+      let updatedImpressions = totalImpressions;
+      if (userId && response.results.length > 0) {
+        const impressionsResult = await registerImpressions({
+          query,
+          user_id: userId,
+          document_ids: response.results.map(r => r.document_id),
+        });
+        if (impressionsResult) {
+          updatedImpressions = impressionsResult.total_impressions;
+          setTotalImpressions(updatedImpressions);
+        }
+      }
+
       setStats({
         totalResults: response.total,
         avgCTR: avgCtr,
-        impressions: response.total * 10,
-        avgTime: 2.5,
+        impressions: updatedImpressions,
       });
     } catch (err) {
       console.error('Search error:', err);
@@ -114,7 +137,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [query, topK]);
+  }, [query, topK, totalImpressions]);
 
   const retry = useCallback(async () => {
     if (lastSearchParams) {
@@ -127,9 +150,16 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   }, [search, lastSearchParams]);
 
   const handleDocumentClick = useCallback((doc: DocumentResult, userId?: number) => {
-
+    // Validate URL before opening (security: prevent javascript: or data: URLs)
     if (doc.url) {
-      window.open(doc.url, '_blank');
+      try {
+        const url = new URL(doc.url);
+        if (url.protocol === 'https:' || url.protocol === 'http:') {
+          window.open(doc.url, '_blank', 'noopener,noreferrer');
+        }
+      } catch {
+        // Invalid URL, ignore
+      }
     }
 
 

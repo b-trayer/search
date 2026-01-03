@@ -1,15 +1,20 @@
 
+import logging
 import uuid
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import text
+from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.models import Click, SearchQuery
+
+logger = logging.getLogger(__name__)
 
 
 async def get_batch_ctr_data(
     db: AsyncSession, query: str
 ) -> Dict[str, Tuple[int, int]]:
-    ctr_data = {}
+    ctr_data: Dict[str, Tuple[int, int]] = {}
 
     try:
         result = await db.execute(
@@ -20,9 +25,26 @@ async def get_batch_ctr_data(
                 FROM ctr_stats
                 WHERE query_text = :query
                 GROUP BY document_id
-    from backend.app.models import Click, SearchQuery
-    from sqlalchemy import select
+            """),
+            {"query": query}
+        )
+        for row in result.fetchall():
+            ctr_data[row[0]] = (int(row[1]), int(row[2]))
+    except Exception as e:
+        logger.warning(f"Failed to get CTR data for query '{query}': {e}")
 
+    return ctr_data
+
+
+async def register_click(
+    db: AsyncSession,
+    query: str,
+    document_id: str,
+    user_id: int,
+    position: int,
+    session_id: Optional[str] = None,
+    dwell_time: Optional[int] = None
+) -> None:
     if not session_id:
         session_id = str(uuid.uuid4())
 
@@ -77,15 +99,68 @@ async def register_impressions(
                     INSERT INTO impressions (query_text, document_id, user_id, position, session_id)
                     VALUES (:query, :doc_id, :user_id, :position, :session)
                     ON CONFLICT DO NOTHING
+                """),
+                {"query": query, "doc_id": doc_id, "user_id": user_id, "position": position, "session": session_id}
+            )
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to register impressions for query '{query}': {e}")
+        await db.rollback()
+
+
+async def _ensure_impression(
+    db: AsyncSession,
+    query: str,
+    doc_id: str,
+    user_id: int,
+    position: int,
+    session_id: str
+) -> None:
     try:
         result = await db.execute(
             text("""
                 SELECT 1 FROM impressions
                 WHERE query_text = :query AND document_id = :doc_id AND session_id = :session
+            """),
+            {"query": query, "doc_id": doc_id, "session": session_id}
+        )
+        if not result.fetchone():
+            await db.execute(
+                text("""
                     INSERT INTO impressions (query_text, document_id, user_id, position, session_id)
                     VALUES (:query, :doc_id, :user_id, :position, :session)
+                """),
+                {"query": query, "doc_id": doc_id, "user_id": user_id, "position": position, "session": session_id}
+            )
+    except Exception as e:
+        logger.warning(f"Failed to ensure impression for doc '{doc_id}': {e}")
+
+
+async def _refresh_ctr_stats(db: AsyncSession) -> None:
     try:
         await db.execute(text("REFRESH MATERIALIZED VIEW ctr_stats"))
         await db.commit()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to refresh CTR stats view: {e}")
+
+
+async def get_total_stats(db: AsyncSession) -> Dict[str, int]:
+    """Get total impressions and clicks from the database."""
+    try:
+        result = await db.execute(
+            text("SELECT COUNT(*) FROM impressions")
+        )
+        total_impressions = result.scalar() or 0
+
+        result = await db.execute(
+            text("SELECT COUNT(*) FROM clicks")
+        )
+        total_clicks = result.scalar() or 0
+
+        return {
+            "total_impressions": total_impressions,
+            "total_clicks": total_clicks
+        }
+    except Exception as e:
+        logger.error(f"Failed to get total stats: {e}")
+        return {"total_impressions": 0, "total_clicks": 0}

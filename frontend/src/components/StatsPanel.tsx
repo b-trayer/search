@@ -1,15 +1,14 @@
-import { TrendingUp, MousePointerClick, Eye, Clock } from "lucide-react";
+import { TrendingUp, MousePointerClick, Eye } from "lucide-react";
 import AnimatedCounter from "./AnimatedCounter";
 
 interface StatsPanelProps {
   totalResults: number;
   avgCTR: number;
   impressions: number;
-  avgTime: number;
   isVisible: boolean;
 }
 
-const StatsPanel = ({ totalResults, avgCTR, impressions, avgTime, isVisible }: StatsPanelProps) => {
+const StatsPanel = ({ totalResults, avgCTR, impressions, isVisible }: StatsPanelProps) => {
   if (!isVisible) return null;
 
   const stats = [
@@ -40,19 +39,10 @@ const StatsPanel = ({ totalResults, avgCTR, impressions, avgTime, isVisible }: S
       color: "text-blue-600",
       bgColor: "bg-blue-500/10",
     },
-    {
-      icon: Clock,
-      label: "Ср. время",
-      value: avgTime,
-      suffix: "с",
-      decimals: 1,
-      color: "text-amber-600",
-      bgColor: "bg-amber-500/10",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-slide-up">
+    <div className="grid grid-cols-3 gap-3 mb-6 animate-slide-up">
       {stats.map((stat, index) => (
         <div
           key={stat.label}

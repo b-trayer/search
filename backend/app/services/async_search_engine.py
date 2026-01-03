@@ -15,16 +15,37 @@ from backend.app.services.async_ctr import (
 )
 
 
+# Singleton OpenSearch client - reused across all requests
+_opensearch_client: Optional[AsyncOpenSearch] = None
+
+
+def get_opensearch_client() -> AsyncOpenSearch:
+    """Get or create singleton OpenSearch client."""
+    global _opensearch_client
+    if _opensearch_client is None:
+        _opensearch_client = AsyncOpenSearch(
+            hosts=[{'host': settings.opensearch_host, 'port': settings.opensearch_port}],
+            http_compress=True,
+            use_ssl=False,
+            verify_certs=False,
+            timeout=30,  # Connection timeout in seconds
+        )
+    return _opensearch_client
+
+
+async def close_opensearch_client() -> None:
+    """Close the singleton OpenSearch client (call on app shutdown)."""
+    global _opensearch_client
+    if _opensearch_client is not None:
+        await _opensearch_client.close()
+        _opensearch_client = None
+
+
 class AsyncSearchEngine:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.client = AsyncOpenSearch(
-            hosts=[{'host': settings.opensearch_host, 'port': settings.opensearch_port}],
-            http_compress=True,
-            use_ssl=False,
-            verify_certs=False
-        )
+        self.client = get_opensearch_client()
         self.index_name = settings.opensearch_index
 
     async def search(
@@ -44,7 +65,8 @@ class AsyncSearchEngine:
         response = await self.client.search(
             index=self.index_name,
             body=search_body,
-            size=top_k * 3
+            size=top_k * 3,
+            request_timeout=10,  # Query timeout in seconds
         )
 
         ctr_data = await get_batch_ctr_data(self.db, query)
@@ -110,6 +132,7 @@ class AsyncSearchEngine:
                 filter_clauses.append({"match": {"язык": filters["язык"]}})
 
         return {
+            "track_total_hits": True,
             "query": {
                 "bool": {
                     "must": must_clauses,
@@ -151,4 +174,5 @@ class AsyncSearchEngine:
         await ctr_register_impressions(self.db, query, user_id, document_ids, session_id)
 
     async def close(self) -> None:
-        await self.client.close()
+        # Don't close the singleton client here - it's managed globally
+        pass

@@ -31,7 +31,7 @@ export default function SearchHero({
           {}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-notion-accent-light text-notion-accent text-sm font-medium mb-4">
             <GraduationCap className="h-4 w-4" />
-            7,531 документов в каталоге
+            341 427 документов в каталоге
           </div>
 
           {}
@@ -61,6 +61,7 @@ export default function SearchHero({
                 id="personalization"
                 checked={enablePersonalization}
                 onCheckedChange={onPersonalizationChange}
+                disabled={!selectedUser}
               />
               <Label
                 htmlFor="personalization"

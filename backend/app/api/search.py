@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.database import get_async_db
 from backend.app.services.async_search_engine import AsyncSearchEngine
 from backend.app.services.async_filter_service import AsyncFilterService
+from backend.app.services.async_ctr import get_total_stats
 from backend.app.core.exceptions import (
     UserNotFoundError,
 )
@@ -37,6 +38,13 @@ class ClickEvent(BaseModel):
     position: int
     session_id: Optional[str] = None
     dwell_time: Optional[int] = None
+
+
+class ImpressionsEvent(BaseModel):
+    query: str
+    user_id: int
+    document_ids: list[str]
+    session_id: Optional[str] = None
 
 
 @router.post("/")
@@ -157,6 +165,45 @@ async def register_click(
         await engine.close()
 
 
+@router.post("/impressions")
+async def register_impressions(
+    event: ImpressionsEvent,
+    db: AsyncSession = Depends(get_async_db)
+):
+    engine = AsyncSearchEngine(db)
+    try:
+        await engine.register_impressions(
+            query=event.query,
+            user_id=event.user_id,
+            document_ids=event.document_ids,
+            session_id=event.session_id
+        )
+        stats = await get_total_stats(db)
+        return {"status": "ok", "total_impressions": stats["total_impressions"]}
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "DATABASE_ERROR",
+                "message": "Failed to register impressions"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Impressions registration error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Failed to register impressions"
+            }
+        )
+
+    finally:
+        await engine.close()
+
+
 @router.get("/filters")
 async def get_filters(db: AsyncSession = Depends(get_async_db)):
     try:
@@ -179,5 +226,31 @@ async def get_filters(db: AsyncSession = Depends(get_async_db)):
             detail={
                 "code": "INTERNAL_ERROR",
                 "message": "Failed to load filters"
+            }
+        )
+
+
+@router.get("/stats")
+async def get_stats(db: AsyncSession = Depends(get_async_db)):
+    try:
+        stats = await get_total_stats(db)
+        return stats
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "DATABASE_ERROR",
+                "message": "Failed to load stats"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Stats error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Failed to load stats"
             }
         )

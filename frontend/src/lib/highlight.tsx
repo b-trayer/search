@@ -1,24 +1,33 @@
 
 import React from 'react';
 
+// Escape special regex characters to prevent ReDoS attacks
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function highlightText(
-  text: string,
+  text: string | null | undefined,
   query: string
 ): React.ReactNode {
-  if (!query.trim() || !text) return text;
+  if (!text || typeof text !== 'string') return text || '';
+  if (!query.trim()) return text;
 
-  const words = query
+  const rawWords = query
     .toLowerCase()
     .split(/\s+/)
     .filter((w) => w.length > 2);
 
-  if (words.length === 0) return text;
+  if (rawWords.length === 0) return text;
 
-  const regex = new RegExp(`(${words.join('|')})`, 'gi');
+  // Escape special regex characters for safe regex building
+  const escapedWords = rawWords.map(escapeRegex);
+  const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
   const parts = text.split(regex);
 
   return parts.map((part, i) => {
-    if (words.some((word) => part.toLowerCase() === word)) {
+    // Compare with original unescaped words
+    if (rawWords.some((word) => part.toLowerCase() === word)) {
       return (
         <mark
           key={i}

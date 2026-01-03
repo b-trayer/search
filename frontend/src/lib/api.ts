@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 
 export type ApiErrorCode =
@@ -140,6 +140,44 @@ export async function getFilterOptions(): Promise<FilterOptions> {
   return handleResponse<FilterOptions>(response);
 }
 
+export interface SearchStatsResponse {
+  total_impressions: number;
+  total_clicks: number;
+}
+
+export async function getSearchStats(): Promise<SearchStatsResponse> {
+  const response = await safeFetch(`${API_BASE}/api/search/stats`);
+  return handleResponse<SearchStatsResponse>(response);
+}
+
+export interface ImpressionsData {
+  query: string;
+  user_id: number;
+  document_ids: string[];
+  session_id?: string;
+}
+
+export interface ImpressionsResult {
+  status: string;
+  total_impressions: number;
+}
+
+export async function registerImpressions(data: ImpressionsData): Promise<ImpressionsResult | null> {
+  try {
+    const response = await safeFetch(`${API_BASE}/api/search/impressions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
 export interface ClickResult {
   success: boolean;
   error?: ApiError;
@@ -229,6 +267,7 @@ export const api = {
     query: searchDocuments,
     filters: getFilterOptions,
     click: registerClick,
+    stats: getSearchStats,
   },
   users: {
     list: getUsers,
