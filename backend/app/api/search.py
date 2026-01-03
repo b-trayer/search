@@ -1,11 +1,25 @@
+
+import logging
+from typing import Optional, Dict, Any
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from backend.app.database import get_db
-from backend.app.services.search_engine import SearchEngine
+from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
+from opensearchpy.exceptions import NotFoundError as OpenSearchNotFoundError
+from pydantic import BaseModel, ValidationError
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.database import get_async_db
+from backend.app.services.async_search_engine import AsyncSearchEngine
+from backend.app.services.async_filter_service import AsyncFilterService
+from backend.app.core.exceptions import (
+    UserNotFoundError,
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/search", tags=["search"])
+
 
 class SearchRequest(BaseModel):
     query: str
@@ -15,6 +29,7 @@ class SearchRequest(BaseModel):
     filters: Optional[Dict[str, Any]] = None
     session_id: Optional[str] = None
 
+
 class ClickEvent(BaseModel):
     query: str
     user_id: int
@@ -23,15 +38,21 @@ class ClickEvent(BaseModel):
     session_id: Optional[str] = None
     dwell_time: Optional[int] = None
 
+
 @router.post("/")
 async def search_documents(
     request: SearchRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
-    """Основной поиск"""
+    if not request.query or not request.query.strip():
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "EMPTY_QUERY", "message": "Search query cannot be empty"}
+        )
+
+    engine = AsyncSearchEngine(db)
     try:
-        engine = SearchEngine(db)
-        results = engine.search(
+        results = await engine.search(
             query=request.query,
             user_id=request.user_id,
             top_k=request.top_k,
@@ -39,18 +60,71 @@ async def search_documents(
             filters=request.filters
         )
         return results
+
+    except OpenSearchConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "OPENSEARCH_UNAVAILABLE",
+                "message": "Search service is temporarily unavailable"
+            }
+        )
+
+    except OpenSearchNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "INDEX_NOT_FOUND",
+                "message": f"Search index not found: {str(e)}"
+            }
+        )
+
+    except UserNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": e.code, "message": e.message}
+        )
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "DATABASE_ERROR",
+                "message": "Database temporarily unavailable"
+            }
+        )
+
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "VALIDATION_ERROR",
+                "message": str(e)
+            }
+        )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected search error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred"
+            }
+        )
+
+    finally:
+        await engine.close()
+
 
 @router.post("/click")
 async def register_click(
     click: ClickEvent,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
-    """Регистрация клика"""
+    engine = AsyncSearchEngine(db)
     try:
-        engine = SearchEngine(db)
-        engine.register_click(
+        await engine.register_click(
             query=click.query,
             user_id=click.user_id,
             document_id=click.document_id,
@@ -59,31 +133,51 @@ async def register_click(
             dwell_time=click.dwell_time
         )
         return {"status": "ok"}
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "DATABASE_ERROR",
+                "message": "Failed to register click"
+            }
+        )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Click registration error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Failed to register click"
+            }
+        )
+
+    finally:
+        await engine.close()
+
 
 @router.get("/filters")
-async def get_filters(db: Session = Depends(get_db)):
-    """Получить доступные фильтры"""
+async def get_filters(db: AsyncSession = Depends(get_async_db)):
     try:
-        from backend.app.models import Document
-        
-        # Типы документов
-        doc_types = db.query(Document.document_type).distinct().all()
-        doc_types = [t[0] for t in doc_types]
-        
-        # Предметы
-        subjects = db.query(Document.subject).distinct().all()
-        subjects = [s[0] for s in subjects if s[0]]
-        
-        # Годы
-        years = db.query(Document.year).distinct().order_by(Document.year).all()
-        years = [y[0] for y in years if y[0]]
-        
-        return {
-            "document_types": doc_types,
-            "subjects": subjects,
-            "year_range": {"min": min(years) if years else None, "max": max(years) if years else None}
-        }
+        filter_service = AsyncFilterService(db)
+        return await filter_service.get_filter_options()
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "DATABASE_ERROR",
+                "message": "Failed to load filters"
+            }
+        )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Filters error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Failed to load filters"
+            }
+        )
