@@ -66,11 +66,11 @@ def handle_search_errors(func: Callable):
 @limiter.limit("30/minute")
 @handle_search_errors
 async def search_documents(
-    request: SearchRequest,
-    req: Request,
+    request: Request,
+    search_request: SearchRequest,
     db: AsyncSession = Depends(get_async_db)
 ):
-    if not request.query or not request.query.strip():
+    if not search_request.query or not search_request.query.strip():
         raise HTTPException(
             status_code=400,
             detail={"code": "EMPTY_QUERY", "message": "Search query cannot be empty"}
@@ -78,11 +78,11 @@ async def search_documents(
 
     engine = AsyncSearchEngine(db)
     return await engine.search(
-        query=request.query,
-        user_id=request.user_id,
-        top_k=request.top_k,
-        enable_personalization=request.enable_personalization,
-        filters=request.filters
+        query=search_request.query,
+        user_id=search_request.user_id,
+        top_k=search_request.top_k,
+        enable_personalization=search_request.enable_personalization,
+        filters=search_request.filters
     )
 
 
