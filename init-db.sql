@@ -1,4 +1,4 @@
--- Инициализация схемы БД для библиотечной поисковой системы
+-- Database schema for NSU Library Search
 
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     role VARCHAR(50) NOT NULL,
     specialization VARCHAR(100),
+    faculty VARCHAR(200),
     course INTEGER,
     interests TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -60,22 +61,22 @@ CREATE TABLE IF NOT EXISTS impressions (
 );
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS ctr_stats AS
-SELECT 
-    query_text,
-    document_id,
-    COUNT(DISTINCT i.impression_id) as impressions_count,
-    COUNT(DISTINCT c.click_id) as clicks_count,
-    CASE 
-        WHEN COUNT(DISTINCT i.impression_id) > 0 
+SELECT
+    i.query_text,
+    i.document_id,
+    COUNT(DISTINCT i.impression_id) as impressions,
+    COUNT(DISTINCT c.click_id) as clicks,
+    CASE
+        WHEN COUNT(DISTINCT i.impression_id) > 0
         THEN CAST(COUNT(DISTINCT c.click_id) AS FLOAT) / COUNT(DISTINCT i.impression_id)
-        ELSE 0 
+        ELSE 0
     END as ctr,
     AVG(c.position) as avg_click_position
 FROM impressions i
-LEFT JOIN clicks c ON 
-    i.query_text = c.query_text AND 
+LEFT JOIN clicks c ON
+    i.query_text = c.query_text AND
     i.document_id = c.document_id
-GROUP BY query_text, document_id
+GROUP BY i.query_text, i.document_id
 HAVING COUNT(DISTINCT i.impression_id) >= 3;
 
 CREATE INDEX IF NOT EXISTS idx_clicks_user_id ON clicks(user_id);

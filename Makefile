@@ -1,13 +1,13 @@
-.PHONY: help setup up down restart logs check clean install dev test
+.PHONY: help up down restart logs clean install dev status psql
 
 help:
-	@echo "Доступные команды:"
-	@echo "  make up          - Запустить Docker контейнеры"
-	@echo "  make down        - Остановить контейнеры"
-	@echo "  make dev         - Запустить FastAPI сервер"
-	@echo "  make check       - Проверить инфраструктуру"
-	@echo "  make logs        - Показать логи"
-	@echo "  make psql        - Подключиться к PostgreSQL"
+	@echo "Available commands:"
+	@echo "  make up          - Start Docker containers"
+	@echo "  make down        - Stop containers"
+	@echo "  make dev         - Start FastAPI server"
+	@echo "  make logs        - Show logs"
+	@echo "  make psql        - Connect to PostgreSQL"
+	@echo "  make status      - Show container status"
 
 up:
 	docker-compose up -d
@@ -23,9 +23,6 @@ logs:
 
 dev:
 	uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-
-check:
-	python scripts/check_infrastructure.py
 
 psql:
 	psql -h localhost -p 5432 -U library_user -d library_search
