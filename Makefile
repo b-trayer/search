@@ -1,13 +1,17 @@
-.PHONY: help up down restart logs clean install dev status psql
+.PHONY: help up down restart logs clean dev status psql build
 
 help:
 	@echo "Available commands:"
-	@echo "  make up          - Start Docker containers"
-	@echo "  make down        - Stop containers"
-	@echo "  make dev         - Start FastAPI server"
-	@echo "  make logs        - Show logs"
-	@echo "  make psql        - Connect to PostgreSQL"
-	@echo "  make status      - Show container status"
+	@echo "  make up      - Start all services"
+	@echo "  make down    - Stop all services"
+	@echo "  make build   - Build Docker images"
+	@echo "  make logs    - Show logs"
+	@echo "  make status  - Show container status"
+	@echo "  make dev     - Start backend in dev mode (without Docker)"
+	@echo "  make psql    - Connect to PostgreSQL"
+
+build:
+	docker-compose build
 
 up:
 	docker-compose up -d
@@ -21,19 +25,15 @@ restart:
 logs:
 	docker-compose logs -f
 
+status:
+	docker-compose ps
+
 dev:
 	uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 
 psql:
-	psql -h localhost -p 5432 -U library_user -d library_search
-
-install:
-	python3 -m venv venv
-	. venv/bin/activate && pip install --upgrade pip
-	. venv/bin/activate && pip install -r requirements.txt
+	docker exec -it library-postgres psql -U library_user -d library_search
 
 clean:
 	docker-compose down -v
-
-status:
-	docker-compose ps
+	docker rmi library-backend library-frontend 2>/dev/null || true
