@@ -15,12 +15,10 @@ from backend.app.services.async_ctr import (
 )
 
 
-# Singleton OpenSearch client - reused across all requests
 _opensearch_client: Optional[AsyncOpenSearch] = None
 
 
 def get_opensearch_client() -> AsyncOpenSearch:
-    """Get or create singleton OpenSearch client."""
     global _opensearch_client
     if _opensearch_client is None:
         _opensearch_client = AsyncOpenSearch(
@@ -28,13 +26,12 @@ def get_opensearch_client() -> AsyncOpenSearch:
             http_compress=True,
             use_ssl=False,
             verify_certs=False,
-            timeout=30,  # Connection timeout in seconds
+            timeout=30,
         )
     return _opensearch_client
 
 
 async def close_opensearch_client() -> None:
-    """Close the singleton OpenSearch client (call on app shutdown)."""
     global _opensearch_client
     if _opensearch_client is not None:
         await _opensearch_client.close()
@@ -66,7 +63,7 @@ class AsyncSearchEngine:
             index=self.index_name,
             body=search_body,
             size=top_k * 3,
-            request_timeout=10,  # Query timeout in seconds
+            request_timeout=10,
         )
 
         ctr_data = await get_batch_ctr_data(self.db, query)
@@ -172,7 +169,3 @@ class AsyncSearchEngine:
         session_id: Optional[str] = None
     ) -> None:
         await ctr_register_impressions(self.db, query, user_id, document_ids, session_id)
-
-    async def close(self) -> None:
-        # Don't close the singleton client here - it's managed globally
-        pass

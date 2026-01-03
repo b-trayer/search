@@ -4,11 +4,28 @@ from typing import Optional, List, Dict, Any
 
 
 class SearchRequest(BaseModel):
-    query: str = Field(..., min_length=1, description="Search query")
+    query: str = Field(..., min_length=1, max_length=500, description="Search query")
     user_id: Optional[int] = Field(None, description="User ID for personalization")
     enable_personalization: bool = Field(True, description="Enable personalized ranking")
     top_k: int = Field(10, ge=1, le=100, description="Number of results to return")
-    filters: Optional[Dict[str, str]] = Field(None, description="Optional filters")
+    filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters")
+    session_id: Optional[str] = Field(None, description="Session ID for tracking")
+
+
+class ClickEvent(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="Search query")
+    user_id: int = Field(..., description="User ID")
+    document_id: str = Field(..., description="Clicked document ID")
+    position: int = Field(..., ge=1, description="Position in results")
+    session_id: Optional[str] = Field(None, description="Session ID")
+    dwell_time: Optional[int] = Field(None, ge=0, description="Time spent on document in ms")
+
+
+class ImpressionsEvent(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="Search query")
+    user_id: int = Field(..., description="User ID")
+    document_ids: List[str] = Field(..., description="List of shown document IDs")
+    session_id: Optional[str] = Field(None, description="Session ID")
 
 
 class SearchResult(BaseModel):

@@ -76,13 +76,13 @@ const ResultsArea = ({
       <div className="grid gap-4">
         {results.map((book, index) => (
           <div
-            key={book.id}
+            key={book.document_id}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <BookCard
               book={book}
               onSelect={onSelectBook}
-              isSelected={selectedBook?.id === book.id}
+              isSelected={selectedBook?.document_id === book.document_id}
             />
           </div>
         ))}

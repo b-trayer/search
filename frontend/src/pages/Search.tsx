@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,24 @@ export default function Search() {
     selectedUserId,
     selectUser,
   } = useUsers();
+
+  const isInitialMount = useRef(true);
+  const hasSearchedRef = useRef(hasSearched);
+  const queryRef = useRef(query);
+
+  hasSearchedRef.current = hasSearched;
+  queryRef.current = query;
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (hasSearchedRef.current && queryRef.current.trim()) {
+      search(selectedUserId ?? undefined, enablePersonalization);
+    }
+  }, [selectedUserId, enablePersonalization, search]);
 
   const handleSearch = async () => {
     if (!query.trim()) {

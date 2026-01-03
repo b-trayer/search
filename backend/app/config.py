@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
     postgres_db: str = "library_search"
     postgres_user: str = "library_user"
-    postgres_password: str = "library_password"
+    postgres_password: str
 
     opensearch_host: str = "localhost"
     opensearch_port: int = 9200

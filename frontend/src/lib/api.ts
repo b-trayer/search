@@ -120,7 +120,7 @@ export async function searchDocuments(
   topK: number = 20,
   filters?: SearchFilters
 ): Promise<SearchResponse> {
-  const response = await safeFetch(`${API_BASE}/api/search/`, {
+  const response = await safeFetch(`${API_BASE}/api/v1/search/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -136,7 +136,7 @@ export async function searchDocuments(
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
-  const response = await safeFetch(`${API_BASE}/api/search/filters`);
+  const response = await safeFetch(`${API_BASE}/api/v1/search/filters`);
   return handleResponse<FilterOptions>(response);
 }
 
@@ -146,7 +146,7 @@ export interface SearchStatsResponse {
 }
 
 export async function getSearchStats(): Promise<SearchStatsResponse> {
-  const response = await safeFetch(`${API_BASE}/api/search/stats`);
+  const response = await safeFetch(`${API_BASE}/api/v1/search/stats`);
   return handleResponse<SearchStatsResponse>(response);
 }
 
@@ -164,7 +164,7 @@ export interface ImpressionsResult {
 
 export async function registerImpressions(data: ImpressionsData): Promise<ImpressionsResult | null> {
   try {
-    const response = await safeFetch(`${API_BASE}/api/search/impressions`, {
+    const response = await safeFetch(`${API_BASE}/api/v1/search/impressions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -185,7 +185,7 @@ export interface ClickResult {
 
 export async function registerClick(clickData: ClickData): Promise<ClickResult> {
   try {
-    const response = await safeFetch(`${API_BASE}/api/search/click`, {
+    const response = await safeFetch(`${API_BASE}/api/v1/search/click`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(clickData),
@@ -218,23 +218,23 @@ export async function getUsers(role?: string, limit: number = 130): Promise<User
   if (role) params.append('role', role);
   params.append('limit', limit.toString());
 
-  const response = await safeFetch(`${API_BASE}/api/users/?${params}`);
+  const response = await safeFetch(`${API_BASE}/api/v1/users/?${params}`);
   return handleResponse<User[]>(response);
 }
 
 export async function getUser(userId: number): Promise<User> {
-  const response = await safeFetch(`${API_BASE}/api/users/${userId}`);
+  const response = await safeFetch(`${API_BASE}/api/v1/users/${userId}`);
   return handleResponse<User>(response);
 }
 
 
 export async function getWeights(): Promise<RankingWeights> {
-  const response = await safeFetch(`${API_BASE}/api/settings/weights`);
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/weights`);
   return handleResponse<RankingWeights>(response);
 }
 
 export async function setWeights(weights: RankingWeights): Promise<RankingWeights> {
-  const response = await safeFetch(`${API_BASE}/api/settings/weights`, {
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/weights`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(weights),
@@ -243,19 +243,19 @@ export async function setWeights(weights: RankingWeights): Promise<RankingWeight
 }
 
 export async function getPresets(): Promise<PresetsResponse> {
-  const response = await safeFetch(`${API_BASE}/api/settings/presets`);
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/presets`);
   return handleResponse<PresetsResponse>(response);
 }
 
 export async function applyPreset(preset: WeightPreset): Promise<RankingWeights> {
-  const response = await safeFetch(`${API_BASE}/api/settings/presets/${preset}`, {
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/presets/${preset}`, {
     method: 'POST',
   });
   return handleResponse<RankingWeights>(response);
 }
 
 export async function resetWeights(): Promise<RankingWeights> {
-  const response = await safeFetch(`${API_BASE}/api/settings/reset`, {
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/reset`, {
     method: 'POST',
   });
   return handleResponse<RankingWeights>(response);

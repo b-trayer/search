@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import {
   User,
   ExternalLink,
@@ -9,10 +10,13 @@ import {
   Eye,
   MousePointerClick,
   Database,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { registerClick } from '@/lib/api';
 import { highlightText } from '@/lib/highlight';
+import { parseAuthors, formatOtherAuthors } from '@/lib/utils';
 import type { DocumentResult, UserProfile } from '@/lib/types';
 
 interface DocumentCardProps {
@@ -32,6 +36,8 @@ export default function DocumentCard({
   userProfile,
   onDocumentClick,
 }: DocumentCardProps) {
+  const [showScoreDetails, setShowScoreDetails] = useState(false);
+
   const handleClick = async () => {
     if (userId) {
       await registerClick({
@@ -44,11 +50,7 @@ export default function DocumentCard({
     onDocumentClick?.(doc);
   };
 
-  // Parse authors - first author is main
-  const authorsStr = doc.authors || '';
-  const authorsList = authorsStr.split(',').map(a => a.trim()).filter(Boolean);
-  const mainAuthor = authorsList[0] || '';
-  const otherAuthors = authorsList.slice(1);
+  const { mainAuthor, otherAuthors } = parseAuthors(doc.authors);
 
   const organization = doc.organization || '';
   const language = doc.language || '';
@@ -88,11 +90,7 @@ export default function DocumentCard({
                 <span className="font-medium text-notion-text">{highlightText(mainAuthor, query)}</span>
                 {otherAuthors.length > 0 && (
                   <span className="text-notion-text-tertiary">
-                    {', '}
-                    {otherAuthors.length <= 2
-                      ? otherAuthors.join(', ')
-                      : `${otherAuthors.slice(0, 2).join(', ')} и ещё ${otherAuthors.length - 2}`
-                    }
+                    {', '}{formatOtherAuthors(otherAuthors)}
                   </span>
                 )}
               </div>
@@ -162,19 +160,61 @@ export default function DocumentCard({
               </Badge>
             )}
 
-            {/* CTR & Impressions stats */}
-            {doc.impressions > 0 && (
-              <>
-                <div className="flex items-center gap-1 text-xs text-notion-text-tertiary ml-auto">
-                  <Eye className="h-3 w-3" />
-                  <span>{doc.impressions}</span>
+            {/* CTR & Impressions stats - always show */}
+            <div className="flex items-center gap-1 text-xs text-notion-text-tertiary ml-auto">
+              <Eye className="h-3 w-3" />
+              <span>{doc.impressions}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-notion-text-tertiary">
+              <MousePointerClick className="h-3 w-3" />
+              <span>{doc.clicks}</span>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              CTR: {ctr.toFixed(1)}%
+            </Badge>
+          </div>
+
+          {/* Score with expandable details */}
+          <div className="pt-2 border-t border-notion-border">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowScoreDetails(!showScoreDetails);
+              }}
+              className="flex items-center gap-1 text-xs text-notion-text-secondary hover:text-notion-text transition-colors"
+            >
+              <span className="font-medium">Score: {doc.final_score.toFixed(3)}</span>
+              {showScoreDetails ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </button>
+
+            {showScoreDetails && (
+              <div
+                className="mt-2 p-3 bg-notion-bg-secondary rounded-notion text-xs font-mono space-y-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-notion-text-tertiary">
+                  score = log(1+BM25) + w<sub>u</sub>·f(U,D) + β·log(1+CTR)
                 </div>
-                <div className="flex items-center gap-1 text-xs text-notion-text-tertiary">
-                  <MousePointerClick className="h-3 w-3" />
-                  <span>{doc.clicks}</span>
-                  <span className="text-notion-text-secondary">({ctr.toFixed(1)}%)</span>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <span className="text-notion-text-secondary">log(1+BM25):</span>
+                  <span className="text-right text-notion-text">{doc.log_bm25.toFixed(3)}</span>
+                  <span className="text-notion-text-secondary">f_type:</span>
+                  <span className="text-right text-notion-text">{doc.f_type.toFixed(3)}</span>
+                  <span className="text-notion-text-secondary">f_topic:</span>
+                  <span className="text-right text-notion-text">{doc.f_topic.toFixed(3)}</span>
+                  <span className="text-notion-text-secondary">f_user:</span>
+                  <span className="text-right text-notion-text">{doc.f_user.toFixed(3)}</span>
+                  <span className="text-notion-text-secondary">ctr_factor:</span>
+                  <span className="text-right text-notion-text">{doc.ctr_factor.toFixed(3)}</span>
+                  <div className="col-span-2 border-t border-notion-border my-1"></div>
+                  <span className="font-semibold text-notion-text">Final:</span>
+                  <span className="text-right font-semibold text-notion-text">{doc.final_score.toFixed(3)}</span>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

@@ -88,6 +88,8 @@ CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(document_type);
 CREATE INDEX IF NOT EXISTS idx_documents_subject ON documents(subject);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ctr_stats_unique ON ctr_stats(query_text, document_id);
+
 INSERT INTO users (username, email, role, specialization, course, interests) VALUES
 ('student_ivan', 'ivan@example.com', 'student', 'computer_science', 2, ARRAY['машинное обучение', 'алгоритмы']),
 ('master_anna', 'anna@example.com', 'master', 'mathematics', 1, ARRAY['теория вероятностей', 'статистика']),

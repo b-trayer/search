@@ -4,7 +4,7 @@ from typing import List
 from backend.app.schemas.settings import RankingWeights, WeightPreset, WEIGHT_PRESETS
 from backend.app.services.settings import settings_service
 
-router = APIRouter(prefix="/api/settings", tags=["settings"])
+router = APIRouter(prefix="/api/v1/settings", tags=["settings"])
 
 
 @router.get("/weights", response_model=RankingWeights)

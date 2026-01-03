@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from backend.app.api import search, users, settings
 from backend.app.config import settings as app_settings
 from backend.app.core.logging import setup_logging, get_logger
 from backend.app.core.middleware import RequestIDMiddleware, RequestLoggingMiddleware
+from backend.app.core.rate_limit import limiter, rate_limit_exceeded_handler
 
 setup_logging()
 logger = get_logger(__name__)
@@ -14,6 +17,9 @@ app = FastAPI(
     description="Персонализированная поисковая система для библиотеки НГУ",
     version="0.1.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestIDMiddleware)

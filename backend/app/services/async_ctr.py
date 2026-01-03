@@ -138,7 +138,7 @@ async def _ensure_impression(
 
 async def _refresh_ctr_stats(db: AsyncSession) -> None:
     try:
-        await db.execute(text("REFRESH MATERIALIZED VIEW ctr_stats"))
+        await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY ctr_stats"))
         await db.commit()
     except Exception as e:
         logger.debug(f"Failed to refresh CTR stats view: {e}")

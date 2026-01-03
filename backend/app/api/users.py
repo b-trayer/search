@@ -5,7 +5,7 @@ from backend.app.database import get_db
 from backend.app.models import User, Click
 from backend.app.schemas.user import UserResponse, UserStatsResponse
 
-router = APIRouter(prefix="/api/users", tags=["users"])
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
