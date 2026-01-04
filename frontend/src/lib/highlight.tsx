@@ -1,9 +1,44 @@
 
 import React from 'react';
 
-// Escape special regex characters to prevent ReDoS attacks
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function levenshtein(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= a.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= b.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return matrix[a.length][b.length];
+}
+
+function getAllowedFuzziness(wordLength: number): number {
+  if (wordLength <= 2) return 0;
+  if (wordLength <= 5) return 1;
+  return 2;
+}
+
+function isFuzzyMatch(word: string, queryWord: string): boolean {
+  const w = word.toLowerCase();
+  const q = queryWord.toLowerCase();
+  if (w === q) return false;
+  const allowed = getAllowedFuzziness(q.length);
+  if (allowed === 0) return false;
+  return levenshtein(w, q) <= allowed;
 }
 
 export function highlightText(
@@ -13,30 +48,37 @@ export function highlightText(
   if (!text || typeof text !== 'string') return text || '';
   if (!query.trim()) return text;
 
-  const rawWords = query
+  const queryWords = query
     .toLowerCase()
     .split(/\s+/)
     .filter((w) => w.length > 2);
 
-  if (rawWords.length === 0) return text;
+  if (queryWords.length === 0) return text;
 
-  // Escape special regex characters for safe regex building
-  const escapedWords = rawWords.map(escapeRegex);
-  const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
-  const parts = text.split(regex);
+  const textWords = text.split(/(\s+)/);
 
-  return parts.map((part, i) => {
-    // Compare with original unescaped words
-    if (rawWords.some((word) => part.toLowerCase() === word)) {
+  return textWords.map((part, i) => {
+    if (/^\s+$/.test(part)) return part;
+
+    const partLower = part.toLowerCase().replace(/[.,!?;:()]/g, '');
+    if (partLower.length < 3) return part;
+
+    if (queryWords.some((qw) => partLower === qw)) {
       return (
-        <mark
-          key={i}
-          className="bg-yellow-200 text-notion-text px-0.5 rounded"
-        >
+        <mark key={i} className="bg-yellow-200 text-notion-text px-0.5 rounded">
           {part}
         </mark>
       );
     }
+
+    if (queryWords.some((qw) => isFuzzyMatch(partLower, qw))) {
+      return (
+        <mark key={i} className="bg-orange-200 text-notion-text px-0.5 rounded">
+          {part}
+        </mark>
+      );
+    }
+
     return part;
   });
 }

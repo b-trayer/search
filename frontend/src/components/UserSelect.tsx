@@ -88,26 +88,36 @@ const UserSelect = ({ selectedUserId, onUserChange, onUserLoaded }: UserSelectPr
         <SelectTrigger className="w-[420px] bg-card border-border">
           <div className="flex items-center gap-2">
             <UserIcon className="h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Выберите пользователя" />
+            {selectedUser ? (
+              <span>{selectedUser.username}</span>
+            ) : selectedUserId === null ? (
+              <span className="text-muted-foreground">Без персонализации</span>
+            ) : (
+              <span className="text-muted-foreground">Выберите пользователя</span>
+            )}
           </div>
         </SelectTrigger>
-        <SelectContent className="max-h-80">
+        <SelectContent className="max-h-80 w-[420px]" align="end">
           <SelectItem value="__none__">
             <span className="text-muted-foreground">Без персонализации</span>
           </SelectItem>
           {users.map((user) => (
-            <SelectItem key={user.user_id} value={user.user_id.toString()}>
-              <div className="flex items-center gap-2 w-full">
-                {getRoleIcon(user.role)}
-                <span className="truncate max-w-[140px]">{user.username}</span>
-                <Badge variant="secondary" className="text-xs shrink-0">
-                  {getRoleLabel(user.role)}
-                </Badge>
-                {user.specialization && (
-                  <Badge variant="outline" className="text-xs shrink-0 justify-center">
-                    {user.specialization}
+            <SelectItem key={user.user_id} value={user.user_id.toString()} className="py-2" textValue={user.username}>
+              <div className="flex flex-col gap-1 w-full">
+                <div className="flex items-center gap-2">
+                  {getRoleIcon(user.role)}
+                  <span className="font-medium">{user.username}</span>
+                </div>
+                <div className="flex items-center gap-2 ml-5">
+                  <Badge variant="secondary" className="text-xs">
+                    {getRoleLabel(user.role)}
                   </Badge>
-                )}
+                  {user.specialization && (
+                    <Badge variant="outline" className="text-xs border-border bg-background">
+                      {user.specialization}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </SelectItem>
           ))}

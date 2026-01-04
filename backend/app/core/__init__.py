@@ -1,13 +1,15 @@
 from .preferences import (
-    ROLE_TYPE_MATRIX,
     SPECIALIZATION_TOPICS,
+    COLLECTION_TYPE_MAPPING,
     calculate_f_type,
     calculate_f_topic,
+    infer_document_type,
 )
 
 __all__ = [
-    "ROLE_TYPE_MATRIX",
     "SPECIALIZATION_TOPICS",
+    "COLLECTION_TYPE_MAPPING",
     "calculate_f_type",
     "calculate_f_topic",
+    "infer_document_type",
 ]

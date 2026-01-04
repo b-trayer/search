@@ -1,10 +1,16 @@
-
-import { BookOpen, Globe, Tag, RotateCcw, Filter, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useMemo } from 'react';
+import { BookOpen, Globe, Tag, FileText, Database } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FilterSection, FilterBadges } from '@/components/filters';
-import { COLLECTIONS, SUBJECTS, LANGUAGES } from '@/lib/filter-data';
+import {
+  FilterSection,
+  FilterPanelHeader,
+  HasPdfCheckbox,
+  FilterPanelSkeleton,
+  getDocumentTypeLabel,
+  mergeDocumentTypes,
+} from '@/components/filters';
+import { getFilterOptions } from '@/lib/api';
+import type { FilterOptions } from '@/lib/types';
 import type { Filters } from '@/hooks/use-filters';
 
 interface FilterPanelProps {
@@ -13,103 +19,99 @@ interface FilterPanelProps {
 }
 
 export default function FilterPanel({ filters, onFiltersChange }: FilterPanelProps) {
-  const handleToggle = (
-    key: keyof Filters,
-    name: string,
-    checked: boolean
-  ) => {
-    const updated = checked
-      ? [...filters[key], name]
-      : filters[key].filter((item) => item !== name);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getFilterOptions()
+      .then(setFilterOptions)
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const { mergedDocTypes, docTypeAliasMap } = useMemo(() => {
+    if (!filterOptions) return { mergedDocTypes: [], docTypeAliasMap: new Map<string, string[]>() };
+    const { merged, aliasMap } = mergeDocumentTypes(filterOptions.document_types);
+    return { mergedDocTypes: merged, docTypeAliasMap: aliasMap };
+  }, [filterOptions]);
+
+  const handleToggle = (key: keyof Omit<Filters, 'has_pdf'>, name: string, checked: boolean) => {
+    const updated = checked ? [...filters[key], name] : filters[key].filter((item) => item !== name);
     onFiltersChange({ ...filters, [key]: updated });
   };
 
+  const handleDocTypeToggle = (canonicalName: string, checked: boolean) => {
+    const allAliases = docTypeAliasMap.get(canonicalName) || [canonicalName];
+    let updated: string[];
+    if (checked) {
+      const existingSet = new Set(filters.document_types);
+      allAliases.forEach((alias) => existingSet.add(alias));
+      updated = Array.from(existingSet);
+    } else {
+      updated = filters.document_types.filter((t) => !allAliases.includes(t));
+    }
+    onFiltersChange({ ...filters, document_types: updated });
+  };
+
+  const isDocTypeSelected = (canonicalName: string): boolean => {
+    const allAliases = docTypeAliasMap.get(canonicalName) || [canonicalName];
+    return allAliases.some((alias) => filters.document_types.includes(alias));
+  };
+
   const handleReset = () => {
-    onFiltersChange({ collections: [], subjects: [], languages: [] });
+    onFiltersChange({
+      collections: [], knowledge_areas: [], document_types: [],
+      languages: [], sources: [], has_pdf: null,
+    });
   };
 
   const totalSelected =
-    filters.collections.length + filters.subjects.length + filters.languages.length;
+    filters.collections.length + filters.knowledge_areas.length + filters.document_types.length +
+    filters.languages.length + filters.sources.length + (filters.has_pdf !== null ? 1 : 0);
+
+  if (isLoading) return <FilterPanelSkeleton />;
+  if (!filterOptions) return null;
 
   return (
     <aside className="w-72 shrink-0 hidden lg:block">
       <div className="sticky top-20 rounded-notion bg-notion-bg border border-notion-border shadow-notion-sm overflow-hidden">
-        {}
-        <div className="p-4 border-b border-notion-border bg-notion-bg-secondary">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-notion-text" />
-              <h2 className="font-medium text-notion-text">Фильтры</h2>
-            </div>
-            {totalSelected > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="h-7 px-2 text-xs text-notion-text-secondary hover:text-red-600 hover:bg-red-50"
-              >
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Сбросить
-                <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
-                  {totalSelected}
-                </Badge>
-              </Button>
-            )}
-          </div>
+        <FilterPanelHeader totalSelected={totalSelected} onReset={handleReset} />
 
-          <FilterBadges
-            filters={filters}
-            onRemoveCollection={(name) => handleToggle('collections', name, false)}
-            onRemoveSubject={(name) => handleToggle('subjects', name, false)}
-          />
-        </div>
-
-        {}
-        <ScrollArea className="h-[calc(100vh-220px)]">
+        <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="p-4 space-y-1">
-            <FilterSection
-              title="Коллекция"
-              icon={BookOpen}
-              iconColor="text-notion-accent"
-              items={COLLECTIONS}
-              selected={filters.collections}
-              onToggle={(name, checked) => handleToggle('collections', name, checked)}
-              defaultOpen={true}
-            />
-
-            <div className="border-t border-notion-border my-3" />
-
-            <FilterSection
-              title="Область знания"
-              icon={Tag}
-              iconColor="text-green-600"
-              items={SUBJECTS}
-              selected={filters.subjects}
-              onToggle={(name, checked) => handleToggle('subjects', name, checked)}
-              defaultOpen={false}
-            />
-
-            <div className="border-t border-notion-border my-3" />
-
-            <FilterSection
-              title="Язык"
-              icon={Globe}
-              iconColor="text-purple-600"
-              items={LANGUAGES}
-              selected={filters.languages}
-              onToggle={(name, checked) => handleToggle('languages', name, checked)}
-              defaultOpen={false}
-            />
+            {filterOptions.sources.length > 0 && (
+              <>
+                <FilterSection title="Источник" icon={Database} iconColor="text-blue-600" items={filterOptions.sources} selected={filters.sources} onToggle={(n, c) => handleToggle('sources', n, c)} defaultOpen />
+                <div className="border-t border-notion-border my-3" />
+              </>
+            )}
+            {filterOptions.collections.length > 0 && (
+              <>
+                <FilterSection title="Коллекция" icon={BookOpen} iconColor="text-notion-accent" items={filterOptions.collections} selected={filters.collections} onToggle={(n, c) => handleToggle('collections', n, c)} />
+                <div className="border-t border-notion-border my-3" />
+              </>
+            )}
+            {mergedDocTypes.length > 0 && (
+              <>
+                <FilterSection title="Тип документа" icon={FileText} iconColor="text-orange-600" items={mergedDocTypes} selected={mergedDocTypes.filter((i) => isDocTypeSelected(i.name)).map((i) => i.name)} onToggle={handleDocTypeToggle} labelMapper={getDocumentTypeLabel} />
+                <div className="border-t border-notion-border my-3" />
+              </>
+            )}
+            {filterOptions.knowledge_areas.length > 0 && (
+              <>
+                <FilterSection title="Область знания" icon={Tag} iconColor="text-green-600" items={filterOptions.knowledge_areas} selected={filters.knowledge_areas} onToggle={(n, c) => handleToggle('knowledge_areas', n, c)} />
+                <div className="border-t border-notion-border my-3" />
+              </>
+            )}
+            {filterOptions.languages.length > 0 && (
+              <>
+                <FilterSection title="Язык" icon={Globe} iconColor="text-purple-600" items={filterOptions.languages} selected={filters.languages} onToggle={(n, c) => handleToggle('languages', n, c)} />
+                <div className="border-t border-notion-border my-3" />
+              </>
+            )}
+            <HasPdfCheckbox checked={filters.has_pdf} onChange={(v) => onFiltersChange({ ...filters, has_pdf: v })} count={filterOptions.has_pdf.with_pdf} />
           </div>
         </ScrollArea>
-
-        {}
-        <div className="p-3 border-t border-notion-border bg-notion-bg-secondary">
-          <div className="flex items-center gap-2 text-xs text-notion-text-tertiary">
-            <Sparkles className="h-3 w-3" />
-            <span>Фильтры работают с персонализацией</span>
-          </div>
-        </div>
       </div>
     </aside>
   );

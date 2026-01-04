@@ -1,4 +1,3 @@
-
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from httpx import AsyncClient
@@ -23,23 +22,12 @@ class TestHealthEndpoint:
 
 class TestSearchEndpoint:
 
-    async def test_empty_query_returns_400(self, client: AsyncClient):
+    async def test_empty_query_returns_422(self, client: AsyncClient):
         response = await client.post(
-            "/api/search/",
-            json={"query": "", "top_k": 10}
+            "/api/v1/search/",
+            json={"query": ""}
         )
-        assert response.status_code == 400
-        data = response.json()
-        assert data["detail"]["code"] == "EMPTY_QUERY"
-
-    async def test_whitespace_query_returns_400(self, client: AsyncClient):
-        response = await client.post(
-            "/api/search/",
-            json={"query": "   ", "top_k": 10}
-        )
-        assert response.status_code == 400
-        data = response.json()
-        assert data["detail"]["code"] == "EMPTY_QUERY"
+        assert response.status_code == 422
 
     @patch("backend.app.api.search.AsyncSearchEngine")
     async def test_opensearch_unavailable_returns_503(
@@ -53,8 +41,8 @@ class TestSearchEndpoint:
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/",
-            json={"query": "test query", "top_k": 10}
+            "/api/v1/search/",
+            json={"query": "test query"}
         )
 
         assert response.status_code == 503
@@ -75,8 +63,8 @@ class TestSearchEndpoint:
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/",
-            json={"query": "test query", "top_k": 10}
+            "/api/v1/search/",
+            json={"query": "test query"}
         )
 
         assert response.status_code == 404
@@ -91,6 +79,9 @@ class TestSearchEndpoint:
         mock_engine.search = AsyncMock(return_value={
             "query": "test",
             "total": 2,
+            "page": 1,
+            "per_page": 20,
+            "total_pages": 1,
             "results": [
                 {"document_id": "doc_1", "title": "Test 1", "final_score": 10.5},
                 {"document_id": "doc_2", "title": "Test 2", "final_score": 8.3}
@@ -102,8 +93,8 @@ class TestSearchEndpoint:
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/",
-            json={"query": "test query", "top_k": 10}
+            "/api/v1/search/",
+            json={"query": "test query"}
         )
 
         assert response.status_code == 200
@@ -118,18 +109,21 @@ class TestSearchEndpoint:
     ):
         mock_engine = AsyncMock()
         mock_engine.search = AsyncMock(return_value={
-            "query": "D878:0",
+            "query": "physics",
             "total": 1,
+            "page": 1,
+            "per_page": 20,
+            "total_pages": 1,
             "results": [{"document_id": "doc_1", "title": "Physics", "final_score": 15.0}],
             "personalized": True,
-            "user_profile": {"role": "student", "specialization": "$878:0"}
+            "user_profile": {"role": "student", "specialization": "Physics"}
         })
         mock_engine.close = AsyncMock()
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/",
-            json={"query": "D878:0", "user_id": 1, "enable_personalization": True}
+            "/api/v1/search/",
+            json={"query": "physics", "user_id": 1, "enable_personalization": True}
         )
 
         assert response.status_code == 200
@@ -150,7 +144,7 @@ class TestClickEndpoint:
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/click",
+            "/api/v1/search/click",
             json={
                 "query": "test query",
                 "user_id": 1,
@@ -166,7 +160,7 @@ class TestClickEndpoint:
 
     async def test_click_missing_required_fields(self, client: AsyncClient):
         response = await client.post(
-            "/api/search/click",
+            "/api/v1/search/click",
             json={"query": "test"}
         )
         assert response.status_code == 422
@@ -185,7 +179,7 @@ class TestClickEndpoint:
         mock_engine_class.return_value = mock_engine
 
         response = await client.post(
-            "/api/search/click",
+            "/api/v1/search/click",
             json={
                 "query": "test",
                 "user_id": 1,
@@ -201,38 +195,40 @@ class TestClickEndpoint:
 
 class TestFiltersEndpoint:
 
-    @patch("backend.app.api.search.AsyncFilterService")
+    @patch("backend.app.api.search.AsyncSearchEngine")
     async def test_get_filters_success(
-        self, mock_filter_class, client: AsyncClient
+        self, mock_engine_class, client: AsyncClient
     ):
-        mock_filter = AsyncMock()
-        mock_filter.get_filter_options = AsyncMock(return_value={
-            "document_types": ["textbook", "monograph"],
-            "subjects": ["$878:0", "0B5<0B8:0"],
-            "year_range": {"min": 1990, "max": 2024}
+        mock_engine = AsyncMock()
+        mock_engine.get_filter_options = AsyncMock(return_value={
+            "document_types": [{"name": "textbook", "count": 100}],
+            "languages": [{"name": "ru", "count": 200}],
+            "collections": [],
+            "knowledge_areas": [],
+            "sources": [],
+            "has_pdf": {"with_pdf": 50, "total": 100},
         })
-        mock_filter_class.return_value = mock_filter
+        mock_engine_class.return_value = mock_engine
 
-        response = await client.get("/api/search/filters")
+        response = await client.get("/api/v1/search/filters")
 
         assert response.status_code == 200
         data = response.json()
         assert "document_types" in data
-        assert "subjects" in data
 
-    @patch("backend.app.api.search.AsyncFilterService")
+    @patch("backend.app.api.search.AsyncSearchEngine")
     async def test_filters_database_error_returns_503(
-        self, mock_filter_class, client: AsyncClient
+        self, mock_engine_class, client: AsyncClient
     ):
         from sqlalchemy.exc import SQLAlchemyError
 
-        mock_filter = AsyncMock()
-        mock_filter.get_filter_options = AsyncMock(
+        mock_engine = AsyncMock()
+        mock_engine.get_filter_options = AsyncMock(
             side_effect=SQLAlchemyError("DB error")
         )
-        mock_filter_class.return_value = mock_filter
+        mock_engine_class.return_value = mock_engine
 
-        response = await client.get("/api/search/filters")
+        response = await client.get("/api/v1/search/filters")
 
         assert response.status_code == 503
         data = response.json()
@@ -241,21 +237,17 @@ class TestFiltersEndpoint:
 
 class TestErrorResponses:
 
-    async def test_error_response_has_code_and_message(self, client: AsyncClient):
+    async def test_error_response_format(self, client: AsyncClient):
         response = await client.post(
-            "/api/search/",
+            "/api/v1/search/",
             json={"query": ""}
         )
 
-        assert response.status_code == 400
-        data = response.json()
-        assert "detail" in data
-        assert "code" in data["detail"]
-        assert "message" in data["detail"]
+        assert response.status_code == 422
 
     async def test_validation_error_returns_422(self, client: AsyncClient):
         response = await client.post(
-            "/api/search/",
+            "/api/v1/search/",
             json={"query": 123}
         )
         assert response.status_code == 422

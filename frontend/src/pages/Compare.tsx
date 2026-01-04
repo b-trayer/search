@@ -1,44 +1,67 @@
-
-import { Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useCompare } from '@/hooks/use-compare';
-import { CompareHeader, CompareStats, ResultColumn } from '@/components/compare';
-import UserSelect from '@/components/UserSelect';
+import {
+  CompareHeader,
+  CompareStats,
+  ResultColumn,
+  CompareSearchBar,
+  DemoScenarioButtons,
+  UserComparisonCards,
+  DEMO_SCENARIOS,
+} from '@/components/compare';
+import type { DemoScenario } from '@/components/compare';
+import { getUser } from '@/lib/api';
 
 export default function Compare() {
   const { toast } = useToast();
   const {
-    query,
-    setQuery,
-    isLoading,
-    left,
-    right,
-    setLeftUserId,
-    setLeftUser,
-    setRightUserId,
-    setRightUser,
-    compare,
-    stats,
+    query, setQuery, isLoading, left, right,
+    setLeftUserId, setLeftUser, setRightUserId, setRightUser,
+    compare, stats,
   } = useCompare();
 
   const handleCompare = async () => {
     if (!query.trim()) {
-      toast({
-        title: 'Введите поисковый запрос',
-        variant: 'destructive',
-      });
+      toast({ title: 'Введите поисковый запрос', variant: 'destructive' });
       return;
     }
-
     await compare();
+    toast({ title: 'Сравнение готово', description: `Запрос: "${query}"` });
+  };
 
-    toast({
-      title: 'Сравнение готово',
-      description: `Запрос: "${query}"`,
-    });
+  const runDemoScenario = async (scenario: DemoScenario) => {
+    setQuery(scenario.query);
+    setLeftUserId(scenario.leftUserId);
+    setRightUserId(scenario.rightUserId);
+
+    const loadUsers = async () => {
+      if (scenario.leftUserId) {
+        try {
+          const user = await getUser(scenario.leftUserId);
+          setLeftUser(user);
+        } catch {
+          setLeftUser(null);
+        }
+      } else {
+        setLeftUser(null);
+      }
+
+      if (scenario.rightUserId) {
+        try {
+          const user = await getUser(scenario.rightUserId);
+          setRightUser(user);
+        } catch {
+          setRightUser(null);
+        }
+      } else {
+        setRightUser(null);
+      }
+    };
+
+    loadUsers();
+    await compare(scenario.query, scenario.leftUserId, scenario.rightUserId);
+    toast({ title: 'Демо-сценарий запущен', description: scenario.title });
   };
 
   return (
@@ -46,83 +69,36 @@ export default function Compare() {
       <CompareHeader />
 
       <main className="container mx-auto px-4 py-8">
-        {}
         <Card className="mb-6 border-notion-border">
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-notion-text-tertiary" />
-                <Input
-                  placeholder="Введите поисковый запрос для сравнения..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCompare()}
-                  className="pl-10 border-notion-border focus:border-notion-accent"
-                />
-              </div>
-              <Button
-                onClick={handleCompare}
-                disabled={isLoading}
-                className="bg-notion-accent hover:bg-notion-accent-hover"
-              >
-                {isLoading ? 'Загрузка...' : 'Сравнить'}
-              </Button>
-            </div>
+          <CardContent className="pt-6 space-y-4">
+            <CompareSearchBar
+              query={query}
+              onQueryChange={setQuery}
+              onCompare={handleCompare}
+              isLoading={isLoading}
+            />
+            <DemoScenarioButtons
+              scenarios={DEMO_SCENARIOS}
+              onSelect={runDemoScenario}
+              disabled={isLoading}
+            />
           </CardContent>
         </Card>
 
-        {}
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <Card className="border-notion-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-notion-text-secondary">
-                Пользователь 1
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserSelect
-                selectedUserId={left.userId}
-                onUserChange={setLeftUserId}
-                onUserLoaded={setLeftUser}
-              />
-            </CardContent>
-          </Card>
+        <UserComparisonCards
+          leftUserId={left.userId}
+          rightUserId={right.userId}
+          onLeftUserChange={setLeftUserId}
+          onRightUserChange={setRightUserId}
+          onLeftUserLoaded={setLeftUser}
+          onRightUserLoaded={setRightUser}
+        />
 
-          <Card className="border-notion-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-notion-text-secondary">
-                Пользователь 2
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserSelect
-                selectedUserId={right.userId}
-                onUserChange={setRightUserId}
-                onUserLoaded={setRightUser}
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {stats && <CompareStats stats={stats} leftUser={left.user} rightUser={right.user} />}
 
-        {}
-        {stats && (
-          <CompareStats stats={stats} leftUser={left.user} rightUser={right.user} />
-        )}
-
-        {}
         <div className="grid grid-cols-2 gap-6">
-          <ResultColumn
-            user={left.user}
-            results={left.results}
-            otherResults={right.results}
-            label="Результаты 1"
-          />
-          <ResultColumn
-            user={right.user}
-            results={right.results}
-            otherResults={left.results}
-            label="Результаты 2"
-          />
+          <ResultColumn user={left.user} results={left.results} otherResults={right.results} label="Результаты 1" />
+          <ResultColumn user={right.user} results={right.results} otherResults={left.results} label="Результаты 2" />
         </div>
       </main>
     </div>

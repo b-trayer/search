@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import type { FilterItem } from '@/lib/filter-data';
+import type { FilterItem } from '@/lib/types';
 
 interface FilterSectionProps {
   title: string;
@@ -18,6 +18,7 @@ interface FilterSectionProps {
   selected: string[];
   onToggle: (name: string, checked: boolean) => void;
   defaultOpen?: boolean;
+  labelMapper?: (name: string) => string;
 }
 
 export default function FilterSection({
@@ -28,6 +29,7 @@ export default function FilterSection({
   selected,
   onToggle,
   defaultOpen = true,
+  labelMapper,
 }: FilterSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -78,7 +80,7 @@ export default function FilterSection({
                     isSelected ? 'text-notion-text font-medium' : 'text-notion-text-secondary'
                   }`}
                 >
-                  {item.name}
+                  {labelMapper ? labelMapper(item.name) : item.name}
                 </span>
                 <span className="text-xs text-notion-text-tertiary tabular-nums">
                   {item.count.toLocaleString()}

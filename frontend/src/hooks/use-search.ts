@@ -1,128 +1,15 @@
-
 import { useReducer, useCallback, useEffect, useRef } from 'react';
 import { searchDocuments, registerClick, getSearchStats, registerImpressions, ApiError } from '@/lib/api';
-import type { DocumentResult, UserProfile, SearchStats, SearchFilters } from '@/lib/types';
+import type { DocumentResult, SearchFilters } from '@/lib/types';
+import { searchReducer, initialSearchState, type SearchAction } from './search-reducer';
 
 interface UseSearchOptions {
-  topK?: number;
-}
-
-interface SearchState {
-  query: string;
-  results: DocumentResult[];
-  isLoading: boolean;
-  hasSearched: boolean;
-  totalResults: number;
-  isPersonalized: boolean;
-  userProfile: UserProfile | null;
-  stats: SearchStats;
-  error: string | null;
-  errorCode: string | null;
-  isRetryable: boolean;
-  totalImpressions: number;
-  lastSearchParams: {
-    userId?: number;
-    enablePersonalization: boolean;
-    filters?: SearchFilters;
-  } | null;
-}
-
-type SearchAction =
-  | { type: 'SET_QUERY'; payload: string }
-  | { type: 'SEARCH_START' }
-  | { type: 'SEARCH_SUCCESS'; payload: { results: DocumentResult[]; total: number; personalized: boolean; userProfile: UserProfile | null } }
-  | { type: 'SEARCH_ERROR'; payload: { error: string; errorCode: string; isRetryable: boolean } }
-  | { type: 'SET_STATS'; payload: SearchStats }
-  | { type: 'SET_IMPRESSIONS'; payload: number }
-  | { type: 'SET_LAST_PARAMS'; payload: SearchState['lastSearchParams'] }
-  | { type: 'RESET' }
-  | { type: 'SET_EMPTY_QUERY_ERROR' };
-
-const DEFAULT_STATS: SearchStats = {
-  totalResults: 0,
-  avgCTR: 0,
-  impressions: 0,
-};
-
-const initialState: SearchState = {
-  query: '',
-  results: [],
-  isLoading: false,
-  hasSearched: false,
-  totalResults: 0,
-  isPersonalized: false,
-  userProfile: null,
-  stats: DEFAULT_STATS,
-  error: null,
-  errorCode: null,
-  isRetryable: false,
-  totalImpressions: 0,
-  lastSearchParams: null,
-};
-
-function searchReducer(state: SearchState, action: SearchAction): SearchState {
-  switch (action.type) {
-    case 'SET_QUERY':
-      return { ...state, query: action.payload };
-
-    case 'SEARCH_START':
-      return {
-        ...state,
-        isLoading: true,
-        hasSearched: true,
-        error: null,
-        errorCode: null,
-        isRetryable: false,
-      };
-
-    case 'SEARCH_SUCCESS':
-      return {
-        ...state,
-        isLoading: false,
-        results: action.payload.results,
-        totalResults: action.payload.total,
-        isPersonalized: action.payload.personalized,
-        userProfile: action.payload.userProfile,
-      };
-
-    case 'SEARCH_ERROR':
-      return {
-        ...state,
-        isLoading: false,
-        results: [],
-        error: action.payload.error,
-        errorCode: action.payload.errorCode,
-        isRetryable: action.payload.isRetryable,
-      };
-
-    case 'SET_STATS':
-      return { ...state, stats: action.payload };
-
-    case 'SET_IMPRESSIONS':
-      return { ...state, totalImpressions: action.payload };
-
-    case 'SET_LAST_PARAMS':
-      return { ...state, lastSearchParams: action.payload };
-
-    case 'SET_EMPTY_QUERY_ERROR':
-      return {
-        ...state,
-        error: 'Введите поисковый запрос',
-        errorCode: 'EMPTY_QUERY',
-        isRetryable: false,
-      };
-
-    case 'RESET':
-      return { ...initialState, totalImpressions: state.totalImpressions };
-
-    default:
-      return state;
-  }
+  perPage?: number;
 }
 
 export function useSearch(options: UseSearchOptions = {}) {
-  const { topK = 20 } = options;
-  const [state, dispatch] = useReducer(searchReducer, initialState);
+  const { perPage = 20 } = options;
+  const [state, dispatch] = useReducer(searchReducer, initialSearchState);
 
   const totalImpressionsRef = useRef(state.totalImpressions);
   totalImpressionsRef.current = state.totalImpressions;
@@ -142,7 +29,8 @@ export function useSearch(options: UseSearchOptions = {}) {
   const search = useCallback(async (
     userId?: number,
     enablePersonalization: boolean = true,
-    filters?: SearchFilters
+    filters?: SearchFilters,
+    page: number = 1
   ) => {
     if (!state.query.trim()) {
       dispatch({ type: 'SET_EMPTY_QUERY_ERROR' });
@@ -153,13 +41,15 @@ export function useSearch(options: UseSearchOptions = {}) {
     dispatch({ type: 'SEARCH_START' });
 
     try {
-      const response = await searchDocuments(state.query, userId, enablePersonalization, topK, filters);
+      const response = await searchDocuments(state.query, userId, enablePersonalization, page, perPage, filters);
 
       dispatch({
         type: 'SEARCH_SUCCESS',
         payload: {
           results: response.results,
           total: response.total,
+          page: response.page,
+          totalPages: response.total_pages,
           personalized: response.personalized,
           userProfile: response.user_profile,
         },
@@ -170,10 +60,10 @@ export function useSearch(options: UseSearchOptions = {}) {
         : 0;
 
       let updatedImpressions = totalImpressionsRef.current;
-      if (userId && response.results.length > 0) {
+      if (response.results.length > 0) {
         const impressionsResult = await registerImpressions({
           query: state.query,
-          user_id: userId,
+          user_id: userId ?? null,
           document_ids: response.results.map(r => r.document_id),
         });
         if (impressionsResult) {
@@ -215,17 +105,29 @@ export function useSearch(options: UseSearchOptions = {}) {
         });
       }
     }
-  }, [state.query, topK]);
+  }, [state.query, perPage]);
+
+  const goToPage = useCallback(async (page: number) => {
+    if (state.lastSearchParams) {
+      await search(
+        state.lastSearchParams.userId,
+        state.lastSearchParams.enablePersonalization,
+        state.lastSearchParams.filters,
+        page
+      );
+    }
+  }, [search, state.lastSearchParams]);
 
   const retry = useCallback(async () => {
     if (state.lastSearchParams) {
       await search(
         state.lastSearchParams.userId,
         state.lastSearchParams.enablePersonalization,
-        state.lastSearchParams.filters
+        state.lastSearchParams.filters,
+        state.page
       );
     }
-  }, [search, state.lastSearchParams]);
+  }, [search, state.lastSearchParams, state.page]);
 
   const handleDocumentClick = useCallback((doc: DocumentResult, userId?: number) => {
     if (doc.url) {
@@ -241,15 +143,15 @@ export function useSearch(options: UseSearchOptions = {}) {
       }
     }
 
-    if (userId && state.query) {
+    if (state.query) {
       registerClick({
         query: state.query,
-        user_id: userId,
+        user_id: userId ?? null,
         document_id: doc.document_id,
         position: doc.position,
       }).then(result => {
-        if (!result.success && result.error && import.meta.env.DEV) {
-          console.debug('Click not tracked:', result.error.code);
+        if (result.success) {
+          dispatch({ type: 'INCREMENT_CLICK', payload: doc.document_id });
         }
       });
     }
@@ -269,6 +171,8 @@ export function useSearch(options: UseSearchOptions = {}) {
     isLoading: state.isLoading,
     hasSearched: state.hasSearched,
     totalResults: state.totalResults,
+    page: state.page,
+    totalPages: state.totalPages,
     isPersonalized: state.isPersonalized,
     userProfile: state.userProfile,
     stats: state.stats,
@@ -280,5 +184,6 @@ export function useSearch(options: UseSearchOptions = {}) {
     handleDocumentClick,
     reset,
     retry,
+    goToPage,
   };
 }

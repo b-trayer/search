@@ -7,14 +7,15 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="Search query")
     user_id: Optional[int] = Field(None, description="User ID for personalization")
     enable_personalization: bool = Field(True, description="Enable personalized ranking")
-    top_k: int = Field(10, ge=1, le=100, description="Number of results to return")
+    page: int = Field(1, ge=1, le=2500, description="Page number")
+    per_page: int = Field(20, ge=1, le=100, description="Results per page")
     filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters")
     session_id: Optional[str] = Field(None, description="Session ID for tracking")
 
 
 class ClickEvent(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="Search query")
-    user_id: int = Field(..., description="User ID")
+    user_id: Optional[int] = Field(None, description="User ID (optional for anonymous)")
     document_id: str = Field(..., description="Clicked document ID")
     position: int = Field(..., ge=1, description="Position in results")
     session_id: Optional[str] = Field(None, description="Session ID")
@@ -23,7 +24,7 @@ class ClickEvent(BaseModel):
 
 class ImpressionsEvent(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="Search query")
-    user_id: int = Field(..., description="User ID")
+    user_id: Optional[int] = Field(None, description="User ID (optional for anonymous)")
     document_ids: List[str] = Field(..., description="List of shown document IDs")
     session_id: Optional[str] = Field(None, description="Session ID")
 
@@ -64,6 +65,9 @@ class UserProfile(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     total: int
+    page: int = 1
+    per_page: int = 20
+    total_pages: int = 1
     results: List[SearchResult]
     personalized: bool = False
     user_profile: Optional[UserProfile] = None

@@ -4,8 +4,6 @@ from backend.app.core.preferences import (
     calculate_f_type,
     calculate_f_topic,
     infer_document_type,
-    ROLE_TYPE_MATRIX,
-    SPECIALIZATION_TOPICS,
 )
 
 

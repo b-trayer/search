@@ -12,8 +12,8 @@ interface CompareState {
 export interface CompareStats {
   common: number;
   total: number;
-  avgBoost1: string;
-  avgBoost2: string;
+  avgPersonalization1: string;
+  avgPersonalization2: string;
 }
 
 export function useCompare() {
@@ -49,8 +49,16 @@ export function useCompare() {
     setRight((prev) => ({ ...prev, user }));
   }, []);
 
-  const compare = useCallback(async () => {
-    if (!query.trim()) {
+  const compare = useCallback(async (
+    overrideQuery?: string,
+    overrideLeftUserId?: number | null,
+    overrideRightUserId?: number | null
+  ) => {
+    const searchQuery = overrideQuery ?? query;
+    const leftUserId = overrideLeftUserId !== undefined ? overrideLeftUserId : left.userId;
+    const rightUserId = overrideRightUserId !== undefined ? overrideRightUserId : right.userId;
+
+    if (!searchQuery.trim()) {
       setError('Введите поисковый запрос');
       return;
     }
@@ -60,12 +68,12 @@ export function useCompare() {
 
     try {
       const [response1, response2] = await Promise.all([
-        searchDocuments(query, left.userId || undefined, !!left.userId, 10),
-        searchDocuments(query, right.userId || undefined, !!right.userId, 10),
+        searchDocuments(searchQuery, leftUserId || undefined, !!leftUserId, 1, 10),
+        searchDocuments(searchQuery, rightUserId || undefined, !!rightUserId, 1, 10),
       ]);
 
-      setLeft((prev) => ({ ...prev, results: response1.results }));
-      setRight((prev) => ({ ...prev, results: response2.results }));
+      setLeft((prev) => ({ ...prev, results: response1.results.slice(0, 10) }));
+      setRight((prev) => ({ ...prev, results: response2.results.slice(0, 10) }));
     } catch (err) {
       setError('Не удалось выполнить поиск');
       console.error('Compare error:', err);
@@ -80,17 +88,18 @@ export function useCompare() {
     const ids1 = new Set(left.results.map((d) => d.document_id));
     const ids2 = new Set(right.results.map((d) => d.document_id));
     const common = [...ids1].filter((id) => ids2.has(id)).length;
+    const total = Math.min(left.results.length, right.results.length);
 
-    const avgBoost1 =
-      left.results.reduce((acc, d) => acc + (d.ctr_boost || 1), 0) / left.results.length;
-    const avgBoost2 =
-      right.results.reduce((acc, d) => acc + (d.ctr_boost || 1), 0) / right.results.length;
+    const avgPersonalization1 =
+      left.results.reduce((acc, d) => acc + (d.user_contrib || 0), 0) / left.results.length;
+    const avgPersonalization2 =
+      right.results.reduce((acc, d) => acc + (d.user_contrib || 0), 0) / right.results.length;
 
     return {
       common,
-      total: 10,
-      avgBoost1: avgBoost1.toFixed(2),
-      avgBoost2: avgBoost2.toFixed(2),
+      total,
+      avgPersonalization1: avgPersonalization1.toFixed(3),
+      avgPersonalization2: avgPersonalization2.toFixed(3),
     };
   }, [left.results, right.results]);
 

@@ -27,15 +27,15 @@ export default function CompareStats({ stats, leftUser, rightUser }: CompareStat
           </div>
           <div>
             <p className="text-notion-accent">
-              Средний буст ({leftUser?.specialization || 'без персонализации'}):
+              Персонализация ({leftUser?.specialization || 'без профиля'}):
             </p>
-            <p className="font-bold text-notion-text">×{stats.avgBoost1}</p>
+            <p className="font-bold text-notion-text">+{stats.avgPersonalization1}</p>
           </div>
           <div>
             <p className="text-notion-accent">
-              Средний буст ({rightUser?.specialization || 'без персонализации'}):
+              Персонализация ({rightUser?.specialization || 'без профиля'}):
             </p>
-            <p className="font-bold text-notion-text">×{stats.avgBoost2}</p>
+            <p className="font-bold text-notion-text">+{stats.avgPersonalization2}</p>
           </div>
         </div>
       </CardContent>

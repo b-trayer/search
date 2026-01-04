@@ -1,23 +1,11 @@
-
 import { useState } from 'react';
-import {
-  User,
-  ExternalLink,
-  Building,
-  Globe,
-  Calendar,
-  BookOpen,
-  Eye,
-  MousePointerClick,
-  Database,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { registerClick } from '@/lib/api';
-import { highlightText } from '@/lib/highlight';
-import { parseAuthors, formatOtherAuthors } from '@/lib/utils';
+import { ExternalLink, Building, Database, Calendar } from 'lucide-react';
+import { formatBadgeText, uniqueBadges } from '@/lib/utils';
 import type { DocumentResult, UserProfile } from '@/lib/types';
+import { DocumentCardHeader } from './DocumentCardHeader';
+import { DocumentCardBadges } from './DocumentCardBadges';
+import { DocumentCardStats } from './DocumentCardStats';
+import { DocumentScoreDetails } from './DocumentScoreDetails';
 
 interface DocumentCardProps {
   doc: DocumentResult;
@@ -32,35 +20,20 @@ export default function DocumentCard({
   doc,
   position,
   query,
-  userId,
-  userProfile,
   onDocumentClick,
 }: DocumentCardProps) {
   const [showScoreDetails, setShowScoreDetails] = useState(false);
 
-  const handleClick = async () => {
-    if (userId) {
-      await registerClick({
-        query,
-        user_id: userId,
-        document_id: doc.document_id,
-        position,
-      });
-    }
+  const handleClick = () => {
     onDocumentClick?.(doc);
   };
 
-  const { mainAuthor, otherAuthors } = parseAuthors(doc.authors);
-
   const organization = doc.organization || '';
-  const language = doc.language || '';
+  const language = formatBadgeText(doc.language || '');
   const year = doc.year;
-  const documentType = doc.document_type || '';
-  const subjects = doc.subjects || [];
+  const documentType = formatBadgeText(doc.document_type || '');
+  const subjects = uniqueBadges(doc.subjects || []);
   const source = doc.source || '';
-
-  // CTR calculation
-  const ctr = doc.impressions > 0 ? (doc.clicks / doc.impressions * 100) : 0;
 
   return (
     <article
@@ -69,7 +42,6 @@ export default function DocumentCard({
         transition-all duration-200 hover:shadow-notion-md hover:-translate-y-0.5 hover:border-notion-border-strong"
     >
       <div className="flex gap-4">
-        {/* Position number */}
         <div className="flex-shrink-0">
           <div className="w-10 h-10 rounded-notion flex items-center justify-center font-bold text-lg bg-notion-bg-secondary text-notion-text-secondary group-hover:bg-notion-bg-hover">
             {position}
@@ -77,27 +49,13 @@ export default function DocumentCard({
         </div>
 
         <div className="flex-1 min-w-0 space-y-3">
-          {/* Title */}
-          <h3 className="font-medium text-lg text-notion-text line-clamp-2 group-hover:text-notion-accent transition-colors">
-            {highlightText(doc.title, query)}
-          </h3>
+          <DocumentCardHeader
+            title={doc.title}
+            authors={doc.authors}
+            query={query}
+            highlights={doc.highlights}
+          />
 
-          {/* Authors */}
-          {mainAuthor && (
-            <div className="flex items-start gap-2 text-sm">
-              <User className="h-4 w-4 flex-shrink-0 mt-0.5 text-notion-text-secondary" />
-              <div>
-                <span className="font-medium text-notion-text">{highlightText(mainAuthor, query)}</span>
-                {otherAuthors.length > 0 && (
-                  <span className="text-notion-text-tertiary">
-                    {', '}{formatOtherAuthors(otherAuthors)}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Source & Year row */}
           <div className="flex items-center gap-4 text-sm text-notion-text-secondary">
             {source && (
               <div className="flex items-center gap-1.5">
@@ -113,7 +71,6 @@ export default function DocumentCard({
             )}
           </div>
 
-          {/* Organization */}
           {organization && (
             <div className="flex items-center gap-2 text-sm text-notion-text-tertiary">
               <Building className="h-4 w-4 flex-shrink-0" />
@@ -121,105 +78,26 @@ export default function DocumentCard({
             </div>
           )}
 
-          {/* Subjects */}
-          {subjects.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {subjects.slice(0, 3).map((subject, idx) => (
-                <Badge
-                  key={idx}
-                  variant="outline"
-                  className="text-xs bg-notion-bg-secondary text-notion-text-secondary border-notion-border"
-                >
-                  <BookOpen className="h-3 w-3 mr-1" />
-                  {subject.length > 30 ? subject.slice(0, 30) + '...' : subject}
-                </Badge>
-              ))}
-              {subjects.length > 3 && (
-                <Badge variant="outline" className="text-xs text-notion-text-tertiary border-notion-border">
-                  +{subjects.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
+          <DocumentCardBadges
+            subjects={subjects}
+            documentType={documentType}
+            language={language}
+          />
 
-          {/* Bottom row: document type, language, CTR stats */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            {documentType && (
-              <Badge variant="secondary" className="text-xs">
-                {documentType}
-              </Badge>
-            )}
-
-            {language && (
-              <Badge
-                variant="outline"
-                className="text-xs bg-notion-bg-secondary text-notion-text-tertiary border-notion-border"
-              >
-                <Globe className="h-3 w-3 mr-1" />
-                {language}
-              </Badge>
-            )}
-
-            {/* CTR & Impressions stats - always show */}
-            <div className="flex items-center gap-1 text-xs text-notion-text-tertiary ml-auto">
-              <Eye className="h-3 w-3" />
-              <span>{doc.impressions}</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-notion-text-tertiary">
-              <MousePointerClick className="h-3 w-3" />
-              <span>{doc.clicks}</span>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              CTR: {ctr.toFixed(1)}%
-            </Badge>
+            <DocumentCardStats
+              impressions={doc.impressions}
+              clicks={doc.clicks}
+            />
           </div>
 
-          {/* Score with expandable details */}
-          <div className="pt-2 border-t border-notion-border">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowScoreDetails(!showScoreDetails);
-              }}
-              className="flex items-center gap-1 text-xs text-notion-text-secondary hover:text-notion-text transition-colors"
-            >
-              <span className="font-medium">Score: {doc.final_score.toFixed(3)}</span>
-              {showScoreDetails ? (
-                <ChevronUp className="h-3 w-3" />
-              ) : (
-                <ChevronDown className="h-3 w-3" />
-              )}
-            </button>
-
-            {showScoreDetails && (
-              <div
-                className="mt-2 p-3 bg-notion-bg-secondary rounded-notion text-xs font-mono space-y-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="text-notion-text-tertiary">
-                  score = log(1+BM25) + w<sub>u</sub>·f(U,D) + β·log(1+CTR)
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <span className="text-notion-text-secondary">log(1+BM25):</span>
-                  <span className="text-right text-notion-text">{doc.log_bm25.toFixed(3)}</span>
-                  <span className="text-notion-text-secondary">f_type:</span>
-                  <span className="text-right text-notion-text">{doc.f_type.toFixed(3)}</span>
-                  <span className="text-notion-text-secondary">f_topic:</span>
-                  <span className="text-right text-notion-text">{doc.f_topic.toFixed(3)}</span>
-                  <span className="text-notion-text-secondary">f_user:</span>
-                  <span className="text-right text-notion-text">{doc.f_user.toFixed(3)}</span>
-                  <span className="text-notion-text-secondary">ctr_factor:</span>
-                  <span className="text-right text-notion-text">{doc.ctr_factor.toFixed(3)}</span>
-                  <div className="col-span-2 border-t border-notion-border my-1"></div>
-                  <span className="font-semibold text-notion-text">Final:</span>
-                  <span className="text-right font-semibold text-notion-text">{doc.final_score.toFixed(3)}</span>
-                </div>
-              </div>
-            )}
-          </div>
+          <DocumentScoreDetails
+            doc={doc}
+            isExpanded={showScoreDetails}
+            onToggle={() => setShowScoreDetails(!showScoreDetails)}
+          />
         </div>
 
-        {/* External link icon */}
         {doc.url && (
           <div className="flex-shrink-0 self-start opacity-0 group-hover:opacity-100 transition-opacity">
             <ExternalLink className="h-5 w-5 text-notion-accent" />

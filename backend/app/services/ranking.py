@@ -120,20 +120,36 @@ def calculate_scores(
         if smoothed_ctr > 0:
             ctr_factor = math.log(1 + smoothed_ctr * 10)
 
-    final_score = log_bm25 + weights.w_user * f_user + weights.beta_ctr * ctr_factor
+    user_contrib = weights.w_user * f_user
+    ctr_contrib = weights.beta_ctr * ctr_factor
+
+    log_bm25_r = round(log_bm25, 3)
+    user_contrib_r = round(user_contrib, 3)
+    ctr_contrib_r = round(ctr_contrib, 3)
+    final_score = log_bm25_r + user_contrib_r + ctr_contrib_r
 
     return {
         "base_score": round(bm25_score, 3),
-        "log_bm25": round(log_bm25, 3),
+        "log_bm25": log_bm25_r,
         "f_type": round(f_type_score, 3),
         "f_topic": round(f_topic_score, 3),
         "f_user": round(f_user, 3),
+        "user_contrib": user_contrib_r,
         "smoothed_ctr": round(smoothed_ctr, 4),
         "ctr_factor": round(ctr_factor, 3),
+        "ctr_contrib": ctr_contrib_r,
         "ctr_boost": round(1 + ctr_factor, 3),
         "final_score": round(final_score, 3),
         "clicks": doc_clicks,
         "impressions": doc_impressions,
+        "weights": {
+            "w_user": weights.w_user,
+            "alpha_type": weights.alpha_type,
+            "alpha_topic": weights.alpha_topic,
+            "beta_ctr": weights.beta_ctr,
+            "ctr_alpha_prior": weights.ctr_alpha_prior,
+            "ctr_beta_prior": weights.ctr_beta_prior,
+        },
     }
 
 

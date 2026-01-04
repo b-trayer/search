@@ -2,20 +2,22 @@
 import { BookOpen, SearchX } from 'lucide-react';
 import SearchResults from '@/components/SearchResults';
 import SearchResultsSkeleton from '@/components/SearchResultsSkeleton';
-import StatsPanel from '@/components/StatsPanel';
-import type { DocumentResult, UserProfile, SearchStats } from '@/lib/types';
+import Pagination from '@/components/Pagination';
+import type { DocumentResult, UserProfile } from '@/lib/types';
 
 interface SearchContentProps {
   results: DocumentResult[];
   isLoading: boolean;
   hasSearched: boolean;
   totalResults: number;
+  page: number;
+  totalPages: number;
   isPersonalized: boolean;
   userProfile: UserProfile | null;
-  stats: SearchStats;
   query: string;
   userId: number | null;
   onDocumentClick: (doc: DocumentResult) => void;
+  onPageChange: (page: number) => void;
 }
 
 export default function SearchContent({
@@ -23,46 +25,48 @@ export default function SearchContent({
   isLoading,
   hasSearched,
   totalResults,
+  page,
+  totalPages,
   isPersonalized,
   userProfile,
-  stats,
   query,
   userId,
   onDocumentClick,
+  onPageChange,
 }: SearchContentProps) {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {isLoading && <SearchResultsSkeleton />}
+    <main>
+      {isLoading && <SearchResultsSkeleton />}
 
-        {!isLoading && !hasSearched && <EmptyState />}
+      {!isLoading && !hasSearched && <EmptyState />}
 
-        {!isLoading && hasSearched && results.length === 0 && <NoResults />}
+      {!isLoading && hasSearched && results.length === 0 && <NoResults />}
 
-        {!isLoading && hasSearched && results.length > 0 && (
-          <div className="space-y-6">
-            <StatsPanel
-              totalResults={stats.totalResults}
-              avgCTR={stats.avgCTR}
-              impressions={stats.impressions}
-              isVisible={true}
-            />
+      {!isLoading && hasSearched && results.length > 0 && (
+        <div className="space-y-6">
+          <ResultsHeader
+            totalResults={totalResults}
+            page={page}
+            totalPages={totalPages}
+            isPersonalized={isPersonalized}
+          />
 
-            <ResultsHeader
-              totalResults={totalResults}
-              isPersonalized={isPersonalized}
-            />
+          <SearchResults
+            documents={results}
+            query={query}
+            userId={userId}
+            userProfile={userProfile}
+            onDocumentClick={onDocumentClick}
+          />
 
-            <SearchResults
-              documents={results}
-              query={query}
-              userId={userId}
-              userProfile={userProfile}
-              onDocumentClick={onDocumentClick}
-            />
-          </div>
-        )}
-      </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
     </main>
   );
 }
@@ -105,9 +109,13 @@ function NoResults() {
 
 function ResultsHeader({
   totalResults,
+  page,
+  totalPages,
   isPersonalized,
 }: {
   totalResults: number;
+  page: number;
+  totalPages: number;
   isPersonalized: boolean;
 }) {
   return (
@@ -116,6 +124,11 @@ function ResultsHeader({
         Найдено:{' '}
         <span className="font-medium text-notion-text">{totalResults}</span>{' '}
         документов
+        {totalPages > 1 && (
+          <span className="ml-2">
+            (страница {page} из {totalPages})
+          </span>
+        )}
         {isPersonalized && (
           <span className="ml-2 text-notion-accent">✨ с персонализацией</span>
         )}

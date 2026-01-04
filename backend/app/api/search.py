@@ -80,7 +80,8 @@ async def search_documents(
     return await engine.search(
         query=search_request.query,
         user_id=search_request.user_id,
-        top_k=search_request.top_k,
+        page=search_request.page,
+        per_page=search_request.per_page,
         enable_personalization=search_request.enable_personalization,
         filters=search_request.filters
     )
@@ -124,8 +125,8 @@ async def register_impressions(
 @router.get("/filters")
 @handle_search_errors
 async def get_filters(db: AsyncSession = Depends(get_async_db)):
-    filter_service = AsyncFilterService(db)
-    return await filter_service.get_filter_options()
+    engine = AsyncSearchEngine(db)
+    return await engine.get_filter_options()
 
 
 @router.get("/stats")

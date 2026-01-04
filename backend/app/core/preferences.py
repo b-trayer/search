@@ -1,37 +1,6 @@
 
 from typing import List
-
-
-ROLE_TYPE_MATRIX: dict[str, dict[str, float]] = {
-    "student": {
-        "textbook": 0.50,
-        "tutorial": 0.25,
-        "monograph": 0.10,
-        "dissertation": 0.05,
-        "article": 0.10,
-    },
-    "master": {
-        "textbook": 0.30,
-        "tutorial": 0.20,
-        "monograph": 0.20,
-        "dissertation": 0.15,
-        "article": 0.15,
-    },
-    "phd": {
-        "textbook": 0.10,
-        "tutorial": 0.05,
-        "monograph": 0.25,
-        "dissertation": 0.35,
-        "article": 0.25,
-    },
-    "professor": {
-        "textbook": 0.10,
-        "tutorial": 0.05,
-        "monograph": 0.30,
-        "dissertation": 0.25,
-        "article": 0.30,
-    },
-}
+from backend.app.services.preferences import preferences_service
 
 COLLECTION_TYPE_MAPPING: dict[str, str] = {
     "учебник": "textbook",
@@ -40,11 +9,11 @@ COLLECTION_TYPE_MAPPING: dict[str, str] = {
     "практик": "tutorial",
     "методич": "tutorial",
     "монограф": "monograph",
-    "научн": "monograph",
     "диссертац": "dissertation",
     "авторефер": "dissertation",
     "статьи": "article",
     "журнал": "article",
+    "научн": "monograph",
 }
 
 
@@ -92,7 +61,7 @@ SPECIALIZATION_TOPICS: dict[str, List[str]] = {
 
 
 def calculate_f_type(doc_type: str, user_role: str) -> float:
-    return ROLE_TYPE_MATRIX.get(user_role, {}).get(doc_type, 0.0)
+    return preferences_service.get_f_type(doc_type, user_role)
 
 
 def infer_document_type(collection: str) -> str:
@@ -116,15 +85,15 @@ def calculate_f_topic(
     doc_text = ' '.join(doc_subjects).lower()
 
     if user_specialization and user_specialization.lower() in doc_text:
-        return 1.0
+        return preferences_service.get_topic_score("direct_match")
 
     keywords = SPECIALIZATION_TOPICS.get(user_specialization, [])
     for kw in keywords:
         if kw in doc_text:
-            return 0.8
+            return preferences_service.get_topic_score("keyword_match")
 
     for interest in user_interests:
         if interest.lower() in doc_text:
-            return 0.6
+            return preferences_service.get_topic_score("interest_match")
 
     return 0.0

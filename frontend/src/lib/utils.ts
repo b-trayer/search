@@ -32,3 +32,56 @@ export function formatOtherAuthors(otherAuthors: string[], maxVisible: number = 
   }
   return `${otherAuthors.slice(0, maxVisible).join(', ')} и ещё ${otherAuthors.length - maxVisible}`;
 }
+
+const DOCUMENT_TYPE_RU: Record<string, string> = {
+  'book': 'Книга',
+  'serial': 'Периодическое издание',
+  'journal_article': 'Статья из журнала',
+  'textbook': 'Учебник',
+  'dissertation': 'Диссертация',
+  'collection': 'Сборник',
+  'article': 'Статья',
+  'manual': 'Методическое пособие',
+  'nsu_article': 'Статья НГУ',
+  'monograph': 'Монография',
+  'abstract': 'Реферат',
+  'thesis': 'Дипломная работа',
+  'conference': 'Материалы конференции',
+  'reference': 'Справочник',
+  'electronic_copy': 'Электронная копия',
+  'methodical': 'Методическое пособие',
+  'doctoral_dissertation': 'Докторская диссертация',
+  'proceedings': 'Труды конференции',
+  'tutorial': 'Учебное пособие',
+  'electronic': 'Электронный ресурс',
+  'dictionary': 'Словарь',
+  'book_article': 'Статья из книги',
+  'network_resource': 'Сетевой ресурс',
+  'autoreferat': 'Автореферат',
+  'other': 'Другое',
+};
+
+export function formatBadgeText(text: string): string {
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  if (DOCUMENT_TYPE_RU[lower]) {
+    return DOCUMENT_TYPE_RU[lower];
+  }
+  const withoutParens = text.replace(/\s*\([^)]*\)/g, '').trim();
+  if (!withoutParens) return '';
+  return withoutParens.charAt(0).toUpperCase() + withoutParens.slice(1);
+}
+
+export function uniqueBadges(items: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of items) {
+    const formatted = formatBadgeText(item);
+    const lower = formatted.toLowerCase();
+    if (formatted && !seen.has(lower)) {
+      seen.add(lower);
+      result.push(formatted);
+    }
+  }
+  return result;
+}

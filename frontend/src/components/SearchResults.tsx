@@ -25,7 +25,7 @@ export default function SearchResults({
         <DocumentCard
           key={doc.document_id}
           doc={doc}
-          position={index + 1}
+          position={doc.position}
           query={query}
           userId={userId}
           userProfile={userProfile}

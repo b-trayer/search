@@ -22,8 +22,12 @@ export interface UserProfile {
 
 
 export interface SearchFilters {
-  коллекция?: string;
-  язык?: string;
+  collection?: string;
+  language?: string;
+  document_type?: string | string[];
+  knowledge_area?: string;
+  source?: string;
+  has_pdf?: boolean;
 }
 
 export interface DocumentResult {
@@ -47,19 +51,32 @@ export interface DocumentResult {
   f_type: number;
   f_topic: number;
   f_user: number;
+  user_contrib: number;
   smoothed_ctr: number;
   ctr_factor: number;
+  ctr_contrib: number;
   ctr_boost: number;
   final_score: number;
   position: number;
   highlights: Record<string, string[]>;
   clicks: number;
   impressions: number;
+  weights?: {
+    w_user: number;
+    alpha_type: number;
+    alpha_topic: number;
+    beta_ctr: number;
+    ctr_alpha_prior: number;
+    ctr_beta_prior: number;
+  };
 }
 
 export interface SearchResponse {
   query: string;
   total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
   results: DocumentResult[];
   personalized: boolean;
   user_profile: UserProfile | null;
@@ -94,10 +111,18 @@ export interface PresetsResponse {
 }
 
 
+export interface FilterItem {
+  name: string;
+  count: number;
+}
+
 export interface FilterOptions {
-  collections: string[];
-  languages: string[];
-  subjects: string[];
+  collections: FilterItem[];
+  knowledge_areas: FilterItem[];
+  document_types: FilterItem[];
+  languages: FilterItem[];
+  sources: FilterItem[];
+  has_pdf: { with_pdf: number; without_pdf: number };
 }
 
 export interface ActiveFilters {
@@ -109,7 +134,7 @@ export interface ActiveFilters {
 
 export interface ClickData {
   query: string;
-  user_id: number;
+  user_id: number | null;
   document_id: string;
   position: number;
   session_id?: string;
