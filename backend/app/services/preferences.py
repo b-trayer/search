@@ -40,6 +40,48 @@ DEFAULT_TOPIC_SCORES: Dict[str, float] = {
     "interest_match": 0.6,
 }
 
+DEFAULT_SPECIALIZATION_TOPICS: Dict[str, List[str]] = {
+    "Математика": [
+        "математик", "алгебр", "анализ", "геометр", "топологи",
+        "дифференциальн", "интеграл", "теория чисел",
+    ],
+    "Физика": [
+        "физик", "механик", "оптик", "квант", "термодинам",
+        "электродинам", "ядерн", "теоретическ",
+    ],
+    "Информатика": [
+        "информатик", "программир", "алгоритм", "данных",
+        "машинн", "нейрон", "искусственн интеллект", "компьютер",
+    ],
+    "Химия": [
+        "хими", "органич", "неорганич", "аналитич", "биохим",
+    ],
+    "Биология": [
+        "биолог", "генетик", "экологи", "эволюц", "молекуляр",
+    ],
+    "Экономика": [
+        "экономик", "финанс", "менеджмент", "маркетинг", "бухгалтер",
+    ],
+    "История": [
+        "истори", "археолог", "древн", "средневеков", "источник",
+    ],
+    "Филология": [
+        "филолог", "лингвист", "литератур", "языкозн", "фонетик",
+    ],
+    "Право": [
+        "право", "юридич", "законодат", "граждан", "судебн",
+    ],
+    "Философия": [
+        "философ", "этик", "логик", "метафизик", "эпистемолог",
+    ],
+    "Геология": [
+        "геолог", "минерал", "петрограф", "тектоник", "палеонтолог",
+    ],
+    "Востоковедение и африканистика": [
+        "восток", "азия", "африк", "арабск", "китайск", "японск",
+    ],
+}
+
 
 class PreferencesService:
     _instance: Optional['PreferencesService'] = None
@@ -52,6 +94,7 @@ class PreferencesService:
                     cls._instance = super().__new__(cls)
                     cls._instance._role_type_matrix = deepcopy(DEFAULT_ROLE_TYPE_MATRIX)
                     cls._instance._topic_scores = deepcopy(DEFAULT_TOPIC_SCORES)
+                    cls._instance._specialization_topics = deepcopy(DEFAULT_SPECIALIZATION_TOPICS)
                     cls._instance._state_lock = Lock()
         return cls._instance
 
@@ -71,10 +114,23 @@ class PreferencesService:
         with self._state_lock:
             self._topic_scores = deepcopy(scores)
 
+    def get_specialization_topics(self) -> Dict[str, List[str]]:
+        with self._state_lock:
+            return deepcopy(self._specialization_topics)
+
+    def set_specialization_topics(self, topics: Dict[str, List[str]]) -> None:
+        with self._state_lock:
+            self._specialization_topics = deepcopy(topics)
+
+    def get_keywords_for_specialization(self, specialization: str) -> List[str]:
+        with self._state_lock:
+            return self._specialization_topics.get(specialization, [])
+
     def reset(self) -> None:
         with self._state_lock:
             self._role_type_matrix = deepcopy(DEFAULT_ROLE_TYPE_MATRIX)
             self._topic_scores = deepcopy(DEFAULT_TOPIC_SCORES)
+            self._specialization_topics = deepcopy(DEFAULT_SPECIALIZATION_TOPICS)
 
     def get_f_type(self, doc_type: str, user_role: str) -> float:
         with self._state_lock:

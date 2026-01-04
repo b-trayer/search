@@ -73,10 +73,22 @@ async def set_topic_scores(scores: Dict[str, float]) -> Dict[str, float]:
     return preferences_service.get_topic_scores()
 
 
+@router.get("/specialization-topics")
+async def get_specialization_topics() -> Dict[str, List[str]]:
+    return preferences_service.get_specialization_topics()
+
+
+@router.put("/specialization-topics")
+async def set_specialization_topics(topics: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    preferences_service.set_specialization_topics(topics)
+    return preferences_service.get_specialization_topics()
+
+
 @router.post("/preferences/reset")
 async def reset_preferences():
     preferences_service.reset()
     return {
         "role_type_matrix": preferences_service.get_role_type_matrix(),
-        "topic_scores": preferences_service.get_topic_scores()
+        "topic_scores": preferences_service.get_topic_scores(),
+        "specialization_topics": preferences_service.get_specialization_topics()
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { ExternalLink, Building, Database, Calendar } from 'lucide-react';
 import { formatBadgeText, uniqueBadges } from '@/lib/utils';
 import type { DocumentResult, UserProfile } from '@/lib/types';
@@ -16,7 +16,7 @@ interface DocumentCardProps {
   onDocumentClick?: (doc: DocumentResult) => void;
 }
 
-export default function DocumentCard({
+const DocumentCard = memo(function DocumentCard({
   doc,
   position,
   query,
@@ -24,9 +24,13 @@ export default function DocumentCard({
 }: DocumentCardProps) {
   const [showScoreDetails, setShowScoreDetails] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     onDocumentClick?.(doc);
-  };
+  }, [doc, onDocumentClick]);
+
+  const toggleScoreDetails = useCallback(() => {
+    setShowScoreDetails(prev => !prev);
+  }, []);
 
   const organization = doc.organization || '';
   const language = formatBadgeText(doc.language || '');
@@ -94,7 +98,7 @@ export default function DocumentCard({
           <DocumentScoreDetails
             doc={doc}
             isExpanded={showScoreDetails}
-            onToggle={() => setShowScoreDetails(!showScoreDetails)}
+            onToggle={toggleScoreDetails}
           />
         </div>
 
@@ -106,4 +110,6 @@ export default function DocumentCard({
       </div>
     </article>
   );
-}
+});
+
+export default DocumentCard;

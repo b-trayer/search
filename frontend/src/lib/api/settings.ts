@@ -3,6 +3,7 @@ import { API_BASE, safeFetch, handleResponse } from './client';
 
 export type RoleTypeMatrix = Record<string, Record<string, number>>;
 export type TopicScores = Record<string, number>;
+export type SpecializationTopics = Record<string, string[]>;
 
 export async function getWeights(): Promise<RankingWeights> {
   const response = await safeFetch(`${API_BASE}/api/v1/settings/weights`);
@@ -65,7 +66,25 @@ export async function setTopicScores(scores: TopicScores): Promise<TopicScores> 
   return handleResponse<TopicScores>(response);
 }
 
-export async function resetPreferences(): Promise<{ role_type_matrix: RoleTypeMatrix; topic_scores: TopicScores }> {
+export async function getSpecializationTopics(): Promise<SpecializationTopics> {
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/specialization-topics`);
+  return handleResponse<SpecializationTopics>(response);
+}
+
+export async function setSpecializationTopics(topics: SpecializationTopics): Promise<SpecializationTopics> {
+  const response = await safeFetch(`${API_BASE}/api/v1/settings/specialization-topics`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(topics),
+  });
+  return handleResponse<SpecializationTopics>(response);
+}
+
+export async function resetPreferences(): Promise<{
+  role_type_matrix: RoleTypeMatrix;
+  topic_scores: TopicScores;
+  specialization_topics: SpecializationTopics;
+}> {
   const response = await safeFetch(`${API_BASE}/api/v1/settings/preferences/reset`, {
     method: 'POST',
   });

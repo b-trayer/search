@@ -4,13 +4,14 @@ from functools import wraps
 from typing import Callable, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from opensearchpy import AsyncOpenSearch
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 from opensearchpy.exceptions import NotFoundError as OpenSearchNotFoundError
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.database import get_async_db
+from backend.app.database import get_async_db, get_opensearch_client
 from backend.app.services.async_search_engine import AsyncSearchEngine
 from backend.app.services.async_filter_service import AsyncFilterService
 from backend.app.services.async_ctr import get_total_stats
@@ -68,7 +69,8 @@ def handle_search_errors(func: Callable):
 async def search_documents(
     request: Request,
     search_request: SearchRequest,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    opensearch: AsyncOpenSearch = Depends(get_opensearch_client)
 ):
     if not search_request.query or not search_request.query.strip():
         raise HTTPException(
@@ -76,7 +78,7 @@ async def search_documents(
             detail={"code": "EMPTY_QUERY", "message": "Search query cannot be empty"}
         )
 
-    engine = AsyncSearchEngine(db)
+    engine = AsyncSearchEngine(db, opensearch)
     return await engine.search(
         query=search_request.query,
         user_id=search_request.user_id,
@@ -91,9 +93,10 @@ async def search_documents(
 @handle_search_errors
 async def register_click(
     click: ClickEvent,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    opensearch: AsyncOpenSearch = Depends(get_opensearch_client)
 ):
-    engine = AsyncSearchEngine(db)
+    engine = AsyncSearchEngine(db, opensearch)
     await engine.register_click(
         query=click.query,
         user_id=click.user_id,
@@ -109,9 +112,10 @@ async def register_click(
 @handle_search_errors
 async def register_impressions(
     event: ImpressionsEvent,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    opensearch: AsyncOpenSearch = Depends(get_opensearch_client)
 ):
-    engine = AsyncSearchEngine(db)
+    engine = AsyncSearchEngine(db, opensearch)
     await engine.register_impressions(
         query=event.query,
         user_id=event.user_id,
@@ -124,8 +128,11 @@ async def register_impressions(
 
 @router.get("/filters")
 @handle_search_errors
-async def get_filters(db: AsyncSession = Depends(get_async_db)):
-    engine = AsyncSearchEngine(db)
+async def get_filters(
+    db: AsyncSession = Depends(get_async_db),
+    opensearch: AsyncOpenSearch = Depends(get_opensearch_client)
+):
+    engine = AsyncSearchEngine(db, opensearch)
     return await engine.get_filter_options()
 
 

@@ -38,14 +38,19 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         client_ip = request.client.host if request.client else "unknown"
         query_params = str(request.query_params) if request.query_params else ""
+        user_agent = request.headers.get("user-agent", "unknown")
+        content_length = request.headers.get("content-length", "0")
 
         logger.info(
             f"Request: {method} {path}",
             extra={
+                "event": "request_started",
                 "method": method,
                 "path": path,
                 "client_ip": client_ip,
                 "query_params": query_params,
+                "user_agent": user_agent,
+                "content_length": content_length,
             }
         )
 
@@ -59,6 +64,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 log_level,
                 f"Response: {response.status_code} ({duration_ms:.2f}ms)",
                 extra={
+                    "event": "request_completed",
                     "method": method,
                     "path": path,
                     "status_code": response.status_code,
@@ -75,10 +81,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             logger.error(
                 f"Request failed: {type(e).__name__}: {e}",
                 extra={
+                    "event": "request_failed",
                     "method": method,
                     "path": path,
                     "duration_ms": round(duration_ms, 2),
                     "error_type": type(e).__name__,
+                    "error_message": str(e),
                 },
                 exc_info=True
             )

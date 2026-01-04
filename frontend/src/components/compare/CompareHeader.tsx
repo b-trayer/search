@@ -21,7 +21,10 @@ export default function CompareHeader() {
             </Link>
             <div className="flex items-center gap-2">
               <GitCompare className="h-5 w-5 text-notion-accent" />
-              <h1 className="text-lg font-medium text-notion-text">Режим сравнения</h1>
+              <h1 className="text-base sm:text-lg font-medium text-notion-text">
+                <span className="hidden sm:inline">Режим сравнения</span>
+                <span className="sm:hidden">Сравнение</span>
+              </h1>
             </div>
           </div>
         </div>

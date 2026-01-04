@@ -20,7 +20,7 @@ export function UserComparisonCards({
   onRightUserLoaded,
 }: UserComparisonCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-6 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
       <Card className="border-notion-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-notion-text-secondary">

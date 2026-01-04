@@ -4,6 +4,7 @@ import {
   WeightsSection,
   RoleTypeMatrixSection,
   TopicScoresSection,
+  SpecializationTopicsSection,
 } from '@/components/settings';
 
 export default function Settings() {
@@ -12,18 +13,22 @@ export default function Settings() {
     currentPreset,
     roleTypeMatrix,
     topicScores,
+    specializationTopics,
     isLoading,
     isSaving,
     hasChanges,
     handleWeightChange,
     handleMatrixChange,
     handleTopicScoreChange,
+    handleSpecializationTopicsChange,
+    handleAddSpecialization,
+    handleRemoveSpecialization,
     handleSave,
     handleResetAll,
     handlePresetApply,
   } = useSettingsData();
 
-  if (isLoading || !weights || !roleTypeMatrix || !topicScores) {
+  if (isLoading || !weights || !roleTypeMatrix || !topicScores || !specializationTopics) {
     return (
       <div className="min-h-screen bg-notion-bg flex items-center justify-center">
         <div className="text-notion-text-secondary">Загрузка...</div>
@@ -59,6 +64,14 @@ export default function Settings() {
           scores={topicScores}
           isSaving={isSaving}
           onScoreChange={handleTopicScoreChange}
+        />
+
+        <SpecializationTopicsSection
+          topics={specializationTopics}
+          isSaving={isSaving}
+          onTopicsChange={handleSpecializationTopicsChange}
+          onAddSpecialization={handleAddSpecialization}
+          onRemoveSpecialization={handleRemoveSpecialization}
         />
       </main>
     </div>

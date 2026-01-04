@@ -10,14 +10,6 @@ from backend.app.core.preferences import (
 from backend.app.core.types import UserProfileDict, ScoreBreakdown
 
 
-FIELD_MAPPING = {
-    'коллекция': 'collection',
-    'язык': 'language',
-    'организация': 'organization',
-    'выходные_сведения': 'publication_info',
-}
-
-
 def get_field(doc: Dict, *field_names: str, default: str = '') -> str:
     for name in field_names:
         value = doc.get(name)

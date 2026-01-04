@@ -26,10 +26,13 @@ class TestSearchAPI:
         assert response.status_code == 422
 
     @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.search.get_opensearch_client")
     @patch("backend.app.api.search.get_async_db")
-    def test_search_returns_results(self, mock_get_db, mock_engine_class, client):
+    def test_search_returns_results(self, mock_get_db, mock_get_opensearch, mock_engine_class, client):
         mock_db = AsyncMock()
         mock_get_db.return_value = mock_db
+        mock_opensearch = MagicMock()
+        mock_get_opensearch.return_value = mock_opensearch
 
         mock_engine = MagicMock()
         mock_engine.search = AsyncMock(return_value={
@@ -59,10 +62,13 @@ class TestSearchAPI:
         assert "total" in data
 
     @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.search.get_opensearch_client")
     @patch("backend.app.api.search.get_async_db")
-    def test_search_with_user_id(self, mock_get_db, mock_engine_class, client):
+    def test_search_with_user_id(self, mock_get_db, mock_get_opensearch, mock_engine_class, client):
         mock_db = AsyncMock()
         mock_get_db.return_value = mock_db
+        mock_opensearch = MagicMock()
+        mock_get_opensearch.return_value = mock_opensearch
 
         mock_engine = MagicMock()
         mock_engine.search = AsyncMock(return_value={
@@ -87,10 +93,13 @@ class TestSearchAPI:
         assert data.get("personalized") is True
 
     @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.search.get_opensearch_client")
     @patch("backend.app.api.search.get_async_db")
-    def test_search_respects_per_page(self, mock_get_db, mock_engine_class, client):
+    def test_search_respects_per_page(self, mock_get_db, mock_get_opensearch, mock_engine_class, client):
         mock_db = AsyncMock()
         mock_get_db.return_value = mock_db
+        mock_opensearch = MagicMock()
+        mock_get_opensearch.return_value = mock_opensearch
 
         mock_engine = MagicMock()
         mock_engine.search = AsyncMock(return_value={
@@ -304,10 +313,13 @@ class TestUsersAPI:
 class TestClickAPI:
 
     @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.search.get_opensearch_client")
     @patch("backend.app.api.search.get_async_db")
-    def test_register_click(self, mock_get_db, mock_engine_class, client):
+    def test_register_click(self, mock_get_db, mock_get_opensearch, mock_engine_class, client):
         mock_db = AsyncMock()
         mock_get_db.return_value = mock_db
+        mock_opensearch = MagicMock()
+        mock_get_opensearch.return_value = mock_opensearch
 
         mock_engine = MagicMock()
         mock_engine.register_click = AsyncMock()

@@ -9,6 +9,7 @@ import SearchContent from '@/components/search/SearchContent';
 import { SearchNav } from '@/components/search/SearchNav';
 import { SearchFooter } from '@/components/search/SearchFooter';
 import FilterPanel from '@/components/FilterPanel';
+import { MobileFilterSheet } from '@/components/filters';
 import type { DocumentResult } from '@/lib/types';
 
 export default function Search() {
@@ -78,8 +79,11 @@ export default function Search() {
         selectedUser={selectedUser}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
+      <div className="container mx-auto px-4 py-6 lg:py-8">
+        <div className="mb-4 lg:hidden">
+          <MobileFilterSheet filters={filters} onFiltersChange={setFilters} />
+        </div>
+        <div className="flex gap-6 lg:gap-8">
           <FilterPanel filters={filters} onFiltersChange={setFilters} />
           <div className="flex-1 min-w-0">
             <SearchContent

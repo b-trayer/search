@@ -22,21 +22,23 @@ export function TopicScoresSection({
 
       <div className="space-y-3">
         {Object.entries(TOPIC_SCORE_LABELS).map(([key, label]) => (
-          <div key={key} className="p-4 bg-notion-bg-secondary rounded-notion flex items-center justify-between">
-            <label className="font-medium text-notion-text">{label}</label>
-            <div className="flex items-center gap-3">
-              <Slider
-                value={[scores[key] ?? 0]}
-                min={0}
-                max={1}
-                step={0.1}
-                onValueChange={([value]) => onScoreChange(key, value)}
-                disabled={isSaving}
-                className="w-32"
-              />
-              <span className="font-mono text-notion-accent w-10 text-right">
-                {(scores[key] ?? 0).toFixed(1)}
-              </span>
+          <div key={key} className="p-4 bg-notion-bg-secondary rounded-notion">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <label className="font-medium text-notion-text text-sm sm:text-base">{label}</label>
+              <div className="flex items-center gap-3">
+                <Slider
+                  value={[scores[key] ?? 0]}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  onValueChange={([value]) => onScoreChange(key, value)}
+                  disabled={isSaving}
+                  className="w-full sm:w-32"
+                />
+                <span className="font-mono text-notion-accent w-10 text-right shrink-0">
+                  {(scores[key] ?? 0).toFixed(1)}
+                </span>
+              </div>
             </div>
           </div>
         ))}

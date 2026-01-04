@@ -25,29 +25,26 @@ export default function SearchHero({
   selectedUser,
 }: SearchHeroProps) {
   return (
-    <section className="py-12 bg-notion-bg-secondary">
+    <section className="py-8 sm:py-12 bg-notion-bg-secondary">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
-          {}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-notion-accent-light text-notion-accent text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-notion-accent-light text-notion-accent text-xs sm:text-sm font-medium mb-3 sm:mb-4">
             <GraduationCap className="h-4 w-4" />
-            341 427 документов в каталоге
+            <span className="hidden sm:inline">341 427 документов в каталоге</span>
+            <span className="sm:hidden">341 427 документов</span>
           </div>
 
-          {}
-          <h2 className="text-3xl md:text-4xl font-medium text-notion-text mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium text-notion-text mb-3 sm:mb-4">
             Найдите нужную литературу
           </h2>
 
-          {}
-          <p className="text-notion-text-secondary mb-8 max-w-xl mx-auto">
+          <p className="text-notion-text-secondary text-sm sm:text-base mb-6 sm:mb-8 max-w-xl mx-auto px-2">
             {selectedUser
-              ? `Результаты адаптированы для специализации: ${selectedUser.specialization || selectedUser.role}`
-              : 'Выберите пользователя для персонализированного поиска'}
+              ? `Результаты адаптированы для: ${selectedUser.specialization || selectedUser.role}`
+              : 'Выберите пользователя для персонализации'}
           </p>
 
-          {}
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3 sm:gap-4">
             <SearchBar
               query={query}
               onQueryChange={onQueryChange}
@@ -55,8 +52,7 @@ export default function SearchHero({
               isLoading={isLoading}
             />
 
-            {}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Switch
                 id="personalization"
                 checked={enablePersonalization}
@@ -65,14 +61,19 @@ export default function SearchHero({
               />
               <Label
                 htmlFor="personalization"
-                className="flex items-center gap-2 cursor-pointer text-sm text-notion-text-secondary"
+                className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-notion-text-secondary"
               >
                 <Sparkles
                   className={`h-4 w-4 ${
                     enablePersonalization ? 'text-notion-accent' : 'text-notion-text-tertiary'
                   }`}
                 />
-                Персонализация {enablePersonalization ? 'включена' : 'выключена'}
+                <span className="hidden sm:inline">
+                  Персонализация {enablePersonalization ? 'включена' : 'выключена'}
+                </span>
+                <span className="sm:hidden">
+                  {enablePersonalization ? 'Вкл' : 'Выкл'}
+                </span>
               </Label>
             </div>
           </div>

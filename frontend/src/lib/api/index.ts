@@ -24,9 +24,12 @@ export {
   setRoleTypeMatrix,
   getTopicScores,
   setTopicScores,
+  getSpecializationTopics,
+  setSpecializationTopics,
   resetPreferences,
   type RoleTypeMatrix,
   type TopicScores,
+  type SpecializationTopics,
 } from './settings';
 
 export type { User, SearchResponse, DocumentResult, RankingWeights } from '../types';

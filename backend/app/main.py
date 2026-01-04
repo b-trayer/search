@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -8,14 +10,25 @@ from backend.app.config import settings as app_settings
 from backend.app.core.logging import setup_logging, get_logger
 from backend.app.core.middleware import RequestIDMiddleware, RequestLoggingMiddleware
 from backend.app.core.rate_limit import limiter, rate_limit_exceeded_handler
+from backend.app.database import OpenSearchClientManager
 
 setup_logging()
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up...")
+    yield
+    logger.info("Shutting down...")
+    await OpenSearchClientManager.close_client()
+
+
 app = FastAPI(
     title="NSU Library Search API",
     description="Персонализированная поисковая система для библиотеки НГУ",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 app.state.limiter = limiter

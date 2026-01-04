@@ -96,7 +96,7 @@ export default function Compare() {
 
         {stats && <CompareStats stats={stats} leftUser={left.user} rightUser={right.user} />}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <ResultColumn user={left.user} results={left.results} otherResults={right.results} label="Результаты 1" />
           <ResultColumn user={right.user} results={right.results} otherResults={left.results} label="Результаты 2" />
         </div>
