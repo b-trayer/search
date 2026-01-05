@@ -12,7 +12,7 @@ from testcontainers.opensearch import OpenSearchContainer
 from backend.app.database import Base
 from backend.app.models import User, Click, Impression
 from backend.app.services.ranking import apply_ranking_formula, bayesian_smoothed_ctr
-from backend.app.services.async_ctr import get_batch_ctr_data, register_click, register_impressions
+from backend.app.services.ctr import get_batch_ctr_data, register_click, register_impressions
 
 
 @pytest.fixture(scope="module")

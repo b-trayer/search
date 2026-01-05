@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import UserSelect from '@/components/UserSelect';
+import UserSelect from '@/components/user-select';
 import type { User } from '@/lib/types';
 
 interface UserComparisonCardsProps {

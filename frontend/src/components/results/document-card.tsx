@@ -2,10 +2,10 @@ import { useState, memo, useCallback } from 'react';
 import { ExternalLink, Building, Database, Calendar } from 'lucide-react';
 import { formatBadgeText, uniqueBadges } from '@/lib/utils';
 import type { DocumentResult, UserProfile } from '@/lib/types';
-import { DocumentCardHeader } from './DocumentCardHeader';
-import { DocumentCardBadges } from './DocumentCardBadges';
-import { DocumentCardStats } from './DocumentCardStats';
-import { DocumentScoreDetails } from './DocumentScoreDetails';
+import { DocumentCardHeader } from './document-card-header';
+import { DocumentCardBadges } from './document-card-badges';
+import { DocumentCardStats } from './document-card-stats';
+import { DocumentScoreDetails } from './document-score-details';
 
 interface DocumentCardProps {
   doc: DocumentResult;

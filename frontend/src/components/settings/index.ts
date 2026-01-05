@@ -1,6 +1,6 @@
-export { SettingsHeader } from './SettingsHeader';
-export { WeightsSection } from './WeightsSection';
-export { RoleTypeMatrixSection } from './RoleTypeMatrixSection';
-export { TopicScoresSection } from './TopicScoresSection';
-export { SpecializationTopicsSection } from './SpecializationTopicsSection';
+export { SettingsHeader } from './settings-header';
+export { WeightsSection } from './weights-section';
+export { RoleTypeMatrixSection } from './role-type-matrix-section';
+export { TopicScoresSection } from './topic-scores-section';
+export { SpecializationTopicsSection } from './specialization-topics-section';
 export * from './constants';

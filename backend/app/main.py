@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from backend.app.api import search, users, settings
+from backend.app.api import search, interactions, users, settings
 from backend.app.config import settings as app_settings
 from backend.app.core.logging import setup_logging, get_logger
 from backend.app.core.middleware import RequestIDMiddleware, RequestLoggingMiddleware
@@ -45,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(search.router)
+app.include_router(interactions.router)
 app.include_router(users.router)
 app.include_router(settings.router)
 

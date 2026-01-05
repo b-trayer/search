@@ -62,24 +62,7 @@ export const initialSearchState: SearchState = {
 function handleIncrementClick(state: SearchState, documentId: string): SearchState {
   const updatedResults = state.results.map(doc => {
     if (doc.document_id !== documentId) return doc;
-
-    const newClicks = doc.clicks + 1;
-    const w = doc.weights;
-    const alpha = w?.ctr_alpha_prior ?? 1.0;
-    const beta = w?.ctr_beta_prior ?? 10.0;
-    const newSmoothedCtr = (newClicks + alpha) / (doc.impressions + alpha + beta);
-    const newCtrFactor = Math.log(1 + newSmoothedCtr * 10);
-    const newCtrContrib = (w?.beta_ctr ?? 0.5) * newCtrFactor;
-    const newFinalScore = doc.log_bm25 + (doc.user_contrib ?? 0) + newCtrContrib;
-
-    return {
-      ...doc,
-      clicks: newClicks,
-      smoothed_ctr: newSmoothedCtr,
-      ctr_factor: newCtrFactor,
-      ctr_contrib: newCtrContrib,
-      final_score: newFinalScore,
-    };
+    return { ...doc, clicks: doc.clicks + 1 };
   });
   return { ...state, results: updatedResults };
 }

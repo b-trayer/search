@@ -2,7 +2,7 @@
 import { GraduationCap, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import SearchBar from '@/components/SearchBar';
+import SearchBar from '@/components/search-bar';
 import type { User } from '@/lib/types';
 
 interface SearchHeroProps {

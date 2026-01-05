@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import FilterPanel from '@/components/FilterPanel';
+import FilterPanel from '@/components/filter-panel';
 import type { Filters } from '@/hooks/use-filters';
 
 interface MobileFilterSheetProps {

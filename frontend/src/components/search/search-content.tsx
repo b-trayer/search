@@ -1,8 +1,8 @@
 
 import { BookOpen, SearchX } from 'lucide-react';
-import SearchResults from '@/components/SearchResults';
-import SearchResultsSkeleton from '@/components/SearchResultsSkeleton';
-import Pagination from '@/components/Pagination';
+import SearchResults from '@/components/search-results';
+import SearchResultsSkeleton from '@/components/search-results-skeleton';
+import Pagination from '@/components/pagination';
 import type { DocumentResult, UserProfile } from '@/lib/types';
 
 interface SearchContentProps {
@@ -78,7 +78,7 @@ function EmptyState() {
         <BookOpen className="h-20 w-20 text-notion-text-tertiary" />
         <div>
           <h3 className="text-2xl font-medium text-notion-text mb-2">
-            Добро пожаловать в библиотеку НГУ
+            Добро пожаловать в библиотеку
           </h3>
           <p className="text-notion-text-secondary">
             Введите поисковый запрос. Выберите пользователя для персонализированных результатов.

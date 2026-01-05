@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import UserSelect from '@/components/UserSelect';
+import UserSelect from '@/components/user-select';
 
 interface SearchNavProps {
   selectedUserId: number | null;

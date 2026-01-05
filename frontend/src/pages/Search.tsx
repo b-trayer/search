@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearch } from '@/hooks/use-search';
 import { useUsers } from '@/hooks/use-users';
 import { useFilters, convertFiltersToSearchParams } from '@/hooks/use-filters';
-import SearchHeader from '@/components/search/SearchHeader';
-import SearchHero from '@/components/search/SearchHero';
-import SearchContent from '@/components/search/SearchContent';
-import { SearchNav } from '@/components/search/SearchNav';
-import { SearchFooter } from '@/components/search/SearchFooter';
-import FilterPanel from '@/components/FilterPanel';
+import SearchHeader from '@/components/search/search-header';
+import SearchHero from '@/components/search/search-hero';
+import SearchContent from '@/components/search/search-content';
+import { SearchNav } from '@/components/search/search-nav';
+import { SearchFooter } from '@/components/search/search-footer';
+import FilterPanel from '@/components/filter-panel';
 import { MobileFilterSheet } from '@/components/filters';
 import type { DocumentResult } from '@/lib/types';
 
@@ -18,52 +18,40 @@ export default function Search() {
 
   const {
     query, results, isLoading, hasSearched, totalResults,
-    page, totalPages, isPersonalized, userProfile, error,
+    page, totalPages, isPersonalized, userProfile,
     setQuery, search, handleDocumentClick, goToPage,
   } = useSearch();
 
   const { selectedUser, selectedUserId, selectUser } = useUsers();
   const { filters, setFilters } = useFilters();
+  const prevDepsRef = useRef<string | null>(null);
 
-  const isInitialMount = useRef(true);
-  const hasSearchedRef = useRef(hasSearched);
-  const queryRef = useRef(query);
-
-  hasSearchedRef.current = hasSearched;
-  queryRef.current = query;
+  const depsKey = JSON.stringify({ selectedUserId, enablePersonalization, filters });
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    if (prevDepsRef.current === null) {
+      prevDepsRef.current = depsKey;
       return;
     }
+    if (prevDepsRef.current === depsKey) return;
+    prevDepsRef.current = depsKey;
 
-    if (hasSearchedRef.current && queryRef.current.trim()) {
+    if (hasSearched && query.trim()) {
       search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters));
     }
-  }, [selectedUserId, enablePersonalization, filters, search]);
+  }, [depsKey, hasSearched, query, search, selectedUserId, enablePersonalization, filters]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!query.trim()) {
       toast({ title: 'Введите поисковый запрос', description: 'Поле поиска не может быть пустым', variant: 'destructive' });
       return;
     }
-
     await search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters));
+  }, [query, search, selectedUserId, enablePersonalization, filters, toast]);
 
-    if (error) {
-      toast({ title: 'Ошибка поиска', description: error, variant: 'destructive' });
-    } else {
-      toast({
-        title: isPersonalized ? '🎯 Персонализированный поиск' : 'Поиск завершён',
-        description: `Найдено ${totalResults} документов`,
-      });
-    }
-  };
-
-  const onDocumentClick = (doc: DocumentResult) => {
+  const onDocumentClick = useCallback((doc: DocumentResult) => {
     handleDocumentClick(doc, selectedUserId ?? undefined);
-  };
+  }, [handleDocumentClick, selectedUserId]);
 
   return (
     <div className="min-h-screen bg-notion-bg">
@@ -80,11 +68,13 @@ export default function Search() {
       />
 
       <div className="container mx-auto px-4 py-6 lg:py-8">
-        <div className="mb-4 lg:hidden">
-          <MobileFilterSheet filters={filters} onFiltersChange={setFilters} />
-        </div>
+        {hasSearched && (
+          <div className="mb-4 lg:hidden">
+            <MobileFilterSheet filters={filters} onFiltersChange={setFilters} />
+          </div>
+        )}
         <div className="flex gap-6 lg:gap-8">
-          <FilterPanel filters={filters} onFiltersChange={setFilters} />
+          {hasSearched && <FilterPanel filters={filters} onFiltersChange={setFilters} />}
           <div className="flex-1 min-w-0">
             <SearchContent
               results={results}

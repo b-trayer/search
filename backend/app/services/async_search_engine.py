@@ -1,4 +1,4 @@
-
+import logging
 from typing import List, Dict, Optional, Any
 
 from opensearchpy import AsyncOpenSearch
@@ -13,12 +13,15 @@ from backend.app.services.search_query_builder import (
     build_aggregations_query,
     parse_aggregations_response,
 )
-from backend.app.services.async_ctr import (
+from backend.app.services.ctr import (
     get_batch_ctr_data,
     get_aggregated_ctr_data,
     register_click as ctr_register_click,
     register_impressions as ctr_register_impressions,
+    CTRServiceError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncSearchEngine:
@@ -42,7 +45,7 @@ class AsyncSearchEngine:
             user_profile = await self._get_user_profile(user_id)
 
         search_body = build_search_query(query, filters)
-        fetch_size = (page + 1) * per_page
+        fetch_size = page * per_page
 
         response = await self.client.search(
             index=self.index_name,
@@ -51,7 +54,11 @@ class AsyncSearchEngine:
             request_timeout=30,
         )
 
-        ctr_data = await get_batch_ctr_data(self.db, query)
+        try:
+            ctr_data = await get_batch_ctr_data(self.db, query)
+        except CTRServiceError as e:
+            logger.warning(f"CTR data unavailable, proceeding without CTR: {e}")
+            ctr_data = {}
 
         all_results = apply_ranking_formula(
             response['hits']['hits'],
@@ -68,7 +75,11 @@ class AsyncSearchEngine:
         page_results = all_results[start_idx:end_idx]
 
         document_ids = [r['document_id'] for r in page_results]
-        aggregated_ctr = await get_aggregated_ctr_data(self.db, document_ids)
+        try:
+            aggregated_ctr = await get_aggregated_ctr_data(self.db, document_ids)
+        except CTRServiceError as e:
+            logger.warning(f"Aggregated CTR data unavailable: {e}")
+            aggregated_ctr = {}
 
         for result in page_results:
             doc_id = result['document_id']

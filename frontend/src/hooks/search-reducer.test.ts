@@ -158,15 +158,14 @@ describe('searchReducer', () => {
   });
 
   describe('INCREMENT_CLICK', () => {
-    it('increments click count and recalculates scores', () => {
+    it('increments click count without recalculating scores', () => {
       const stateWithResults = { ...initialSearchState, results: [mockDocument] };
       const state = searchReducer(stateWithResults, { type: 'INCREMENT_CLICK', payload: 'doc-1' });
 
       const updatedDoc = state.results[0];
       expect(updatedDoc.clicks).toBe(6);
-      const expectedSmoothedCtr = (6 + 1) / (100 + 1 + 10);
-      expect(updatedDoc.smoothed_ctr).toBeCloseTo(expectedSmoothedCtr, 5);
-      expect(updatedDoc.final_score).not.toBe(mockDocument.final_score);
+      expect(updatedDoc.smoothed_ctr).toBe(mockDocument.smoothed_ctr);
+      expect(updatedDoc.final_score).toBe(mockDocument.final_score);
     });
 
     it('does not modify other documents', () => {

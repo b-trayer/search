@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.exc import OperationalError, IntegrityError, SQLAlchemyError
 
-from backend.app.services.async_ctr import (
+from backend.app.services.ctr import (
     get_batch_ctr_data,
     register_impressions,
     get_total_stats,
@@ -56,23 +56,21 @@ class TestGetBatchCtrData:
         with pytest.raises(CTRDataError):
             await get_batch_ctr_data(mock_session, "test query")
 
-    async def test_returns_empty_on_generic_sqlalchemy_error(self):
+    async def test_raises_ctr_data_error_on_generic_sqlalchemy_error(self):
         mock_session = AsyncMock()
         mock_session.execute.side_effect = SQLAlchemyError("Generic error")
 
-        result = await get_batch_ctr_data(mock_session, "test query")
+        with pytest.raises(CTRDataError):
+            await get_batch_ctr_data(mock_session, "test query")
 
-        assert result == {}
-
-    async def test_handles_value_error_gracefully(self):
+    async def test_raises_ctr_data_error_on_value_error(self):
         mock_session = AsyncMock()
         mock_result = MagicMock()
         mock_result.fetchall.return_value = [("doc_1", "invalid", 100)]
         mock_session.execute.return_value = mock_result
 
-        result = await get_batch_ctr_data(mock_session, "test query")
-
-        assert result == {}
+        with pytest.raises(CTRDataError):
+            await get_batch_ctr_data(mock_session, "test query")
 
 
 class TestRegisterImpressions:
@@ -172,13 +170,12 @@ class TestGetTotalStats:
         with pytest.raises(DatabaseConnectionError):
             await get_total_stats(mock_session)
 
-    async def test_returns_zeros_on_generic_sqlalchemy_error(self):
+    async def test_raises_ctr_data_error_on_generic_sqlalchemy_error(self):
         mock_session = AsyncMock()
         mock_session.execute.side_effect = SQLAlchemyError("Generic error")
 
-        result = await get_total_stats(mock_session)
-
-        assert result == {"total_impressions": 0, "total_clicks": 0}
+        with pytest.raises(CTRDataError):
+            await get_total_stats(mock_session)
 
 
 class TestConcurrentOperations:

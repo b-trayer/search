@@ -1,6 +1,6 @@
-export { default as DocumentCard } from './DocumentCard';
-export { default as ScoreBreakdown } from './ScoreBreakdown';
-export { DocumentCardHeader } from './DocumentCardHeader';
-export { DocumentCardBadges } from './DocumentCardBadges';
-export { DocumentCardStats } from './DocumentCardStats';
-export { DocumentScoreDetails } from './DocumentScoreDetails';
+export { default as DocumentCard } from './document-card';
+export { default as ScoreBreakdown } from './score-breakdown';
+export { DocumentCardHeader } from './document-card-header';
+export { DocumentCardBadges } from './document-card-badges';
+export { DocumentCardStats } from './document-card-stats';
+export { DocumentScoreDetails } from './document-score-details';

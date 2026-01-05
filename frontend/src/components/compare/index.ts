@@ -1,8 +1,8 @@
-export { default as CompareHeader } from './CompareHeader';
-export { default as CompareStats } from './CompareStats';
-export { default as ResultColumn } from './ResultColumn';
-export { CompareSearchBar } from './CompareSearchBar';
-export { DemoScenarioButtons } from './DemoScenarioButtons';
-export { UserComparisonCards } from './UserComparisonCards';
+export { default as CompareHeader } from './compare-header';
+export { default as CompareStats } from './compare-stats';
+export { default as ResultColumn } from './result-column';
+export { CompareSearchBar } from './compare-search-bar';
+export { DemoScenarioButtons } from './demo-scenario-buttons';
+export { UserComparisonCards } from './user-comparison-cards';
 export { DEMO_SCENARIOS } from './constants';
 export type { DemoScenario } from './constants';
