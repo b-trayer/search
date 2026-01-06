@@ -2,7 +2,7 @@
 import { BookOpen, SearchX } from 'lucide-react';
 import SearchResults from '@/components/search-results';
 import SearchResultsSkeleton from '@/components/search-results-skeleton';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/Pagination';
 import type { DocumentResult, UserProfile } from '@/lib/types';
 
 interface SearchContentProps {
