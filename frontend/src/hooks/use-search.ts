@@ -8,9 +8,11 @@ export function useSearch(options: { perPage?: number } = {}) {
   const { perPage = 20 } = options;
   const [state, dispatch] = useReducer(searchReducer, initialSearchState);
 
-  const { getTotalImpressions } = useSearchStats({
-    onImpressionsUpdate: (total) => dispatch({ type: 'SET_IMPRESSIONS', payload: total }),
-  });
+  const onImpressionsUpdate = useCallback((total: number) => {
+    dispatch({ type: 'SET_IMPRESSIONS', payload: total });
+  }, []);
+
+  const { getTotalImpressions } = useSearchStats({ onImpressionsUpdate });
 
   const totalImpressionsRef = useMemo(() => ({ current: getTotalImpressions() }), [getTotalImpressions]);
   const searchAction = useMemo(() => createSearchAction({ query: state.query, perPage, dispatch, totalImpressionsRef }), [state.query, perPage, totalImpressionsRef]);
