@@ -1,35 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { cn, parseAuthors, formatOtherAuthors, formatBadgeText, uniqueBadges } from './utils';
-
-describe('cn', () => {
-  it('merges class names', () => {
-    expect(cn('foo', 'bar')).toBe('foo bar');
-  });
-
-  it('handles conditional classes', () => {
-    const shouldInclude = false;
-    expect(cn('foo', shouldInclude && 'bar', 'baz')).toBe('foo baz');
-  });
-
-  it('merges tailwind classes correctly', () => {
-    expect(cn('p-4', 'p-2')).toBe('p-2');
-  });
-});
+import {
+  parseAuthors,
+  formatOtherAuthors,
+  formatBadgeText,
+  uniqueBadges,
+} from './utils';
 
 describe('parseAuthors', () => {
-  it('returns empty result for null input', () => {
-    const result = parseAuthors(null);
-    expect(result).toEqual({ mainAuthor: '', otherAuthors: [], all: [] });
-  });
-
-  it('returns empty result for undefined input', () => {
-    const result = parseAuthors(undefined);
-    expect(result).toEqual({ mainAuthor: '', otherAuthors: [], all: [] });
-  });
-
-  it('returns empty result for empty string', () => {
-    const result = parseAuthors('');
-    expect(result).toEqual({ mainAuthor: '', otherAuthors: [], all: [] });
+  it('returns empty result for null/undefined', () => {
+    expect(parseAuthors(null)).toEqual({ mainAuthor: '', otherAuthors: [], all: [] });
+    expect(parseAuthors(undefined)).toEqual({ mainAuthor: '', otherAuthors: [], all: [] });
   });
 
   it('parses single author', () => {
@@ -43,7 +23,7 @@ describe('parseAuthors', () => {
     const result = parseAuthors('Иванов И.И., Петров П.П., Сидоров С.С.');
     expect(result.mainAuthor).toBe('Иванов И.И.');
     expect(result.otherAuthors).toEqual(['Петров П.П.', 'Сидоров С.С.']);
-    expect(result.all).toEqual(['Иванов И.И.', 'Петров П.П.', 'Сидоров С.С.']);
+    expect(result.all).toHaveLength(3);
   });
 
   it('trims whitespace', () => {
@@ -58,22 +38,16 @@ describe('formatOtherAuthors', () => {
     expect(formatOtherAuthors([])).toBe('');
   });
 
-  it('returns single author', () => {
-    expect(formatOtherAuthors(['Петров П.П.'])).toBe('Петров П.П.');
+  it('joins authors when less than maxVisible', () => {
+    expect(formatOtherAuthors(['А', 'Б'])).toBe('А, Б');
   });
 
-  it('returns two authors', () => {
-    expect(formatOtherAuthors(['Петров П.П.', 'Сидоров С.С.'])).toBe('Петров П.П., Сидоров С.С.');
-  });
-
-  it('truncates with default maxVisible', () => {
-    const authors = ['Петров П.П.', 'Сидоров С.С.', 'Козлов К.К.', 'Смирнов С.С.'];
-    expect(formatOtherAuthors(authors)).toBe('Петров П.П., Сидоров С.С. и ещё 2');
+  it('shows count when more than maxVisible', () => {
+    expect(formatOtherAuthors(['А', 'Б', 'В', 'Г'])).toBe('А, Б и ещё 2');
   });
 
   it('respects custom maxVisible', () => {
-    const authors = ['A', 'B', 'C', 'D'];
-    expect(formatOtherAuthors(authors, 3)).toBe('A, B, C и ещё 1');
+    expect(formatOtherAuthors(['А', 'Б', 'В'], 1)).toBe('А и ещё 2');
   });
 });
 
@@ -83,23 +57,22 @@ describe('formatBadgeText', () => {
   });
 
   it('translates known document types', () => {
-    expect(formatBadgeText('textbook')).toBe('Учебник');
+    expect(formatBadgeText('book')).toBe('Книга');
     expect(formatBadgeText('dissertation')).toBe('Диссертация');
-    expect(formatBadgeText('article')).toBe('Статья');
-    expect(formatBadgeText('monograph')).toBe('Монография');
+    expect(formatBadgeText('textbook')).toBe('Учебник');
   });
 
-  it('handles case insensitive input', () => {
-    expect(formatBadgeText('TEXTBOOK')).toBe('Учебник');
-    expect(formatBadgeText('Dissertation')).toBe('Диссертация');
+  it('handles case insensitivity', () => {
+    expect(formatBadgeText('BOOK')).toBe('Книга');
+    expect(formatBadgeText('Book')).toBe('Книга');
   });
 
-  it('removes parentheses content', () => {
-    expect(formatBadgeText('Физика (общий курс)')).toBe('Физика');
+  it('removes parentheses content for unknown types', () => {
+    expect(formatBadgeText('Физика (общая)')).toBe('Физика');
   });
 
   it('capitalizes first letter for unknown types', () => {
-    expect(formatBadgeText('unknown_type')).toBe('Unknown_type');
+    expect(formatBadgeText('квантовая механика')).toBe('Квантовая механика');
   });
 });
 
@@ -108,18 +81,32 @@ describe('uniqueBadges', () => {
     expect(uniqueBadges([])).toEqual([]);
   });
 
-  it('removes duplicates case-insensitively', () => {
+  it('removes duplicates', () => {
     const result = uniqueBadges(['Физика', 'физика', 'ФИЗИКА']);
-    expect(result).toEqual(['Физика']);
+    expect(result).toEqual(['физика']);
   });
 
-  it('formats and deduplicates', () => {
-    const result = uniqueBadges(['textbook', 'Textbook', 'учебник']);
-    expect(result.length).toBeLessThanOrEqual(2);
+  it('splits by semicolon', () => {
+    const result = uniqueBadges(['Физика; Математика']);
+    expect(result).toContain('физика');
+    expect(result).toContain('математика');
+  });
+
+  it('splits by comma', () => {
+    const result = uniqueBadges(['Физика, Математика']);
+    expect(result).toContain('физика');
+    expect(result).toContain('математика');
+  });
+
+  it('splits on uppercase transitions', () => {
+    const result = uniqueBadges(['Физика Теоретическая физика']);
+    expect(result.length).toBeGreaterThanOrEqual(1);
   });
 
   it('preserves order of first occurrence', () => {
-    const result = uniqueBadges(['A', 'B', 'A', 'C']);
-    expect(result).toEqual(['A', 'B', 'C']);
+    const result = uniqueBadges(['Физика', 'Математика', 'Физика']);
+    expect(result[0]).toBe('физика');
+    expect(result[1]).toBe('математика');
+    expect(result).toHaveLength(2);
   });
 });

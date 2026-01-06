@@ -10,11 +10,12 @@ import { SearchNav } from '@/components/search/search-nav';
 import { SearchFooter } from '@/components/search/search-footer';
 import FilterPanel from '@/components/filter-panel';
 import { MobileFilterSheet } from '@/components/filters';
-import type { DocumentResult } from '@/lib/types';
+import type { DocumentResult, SearchField } from '@/lib/types';
 
 export default function Search() {
   const { toast } = useToast();
   const [enablePersonalization, setEnablePersonalization] = useState(true);
+  const [searchField, setSearchField] = useState<SearchField>('all');
 
   const {
     query, results, isLoading, hasSearched, totalResults,
@@ -26,7 +27,7 @@ export default function Search() {
   const { filters, setFilters } = useFilters();
   const prevDepsRef = useRef<string | null>(null);
 
-  const depsKey = JSON.stringify({ selectedUserId, enablePersonalization, filters });
+  const depsKey = JSON.stringify({ selectedUserId, enablePersonalization, filters, searchField });
 
   useEffect(() => {
     if (prevDepsRef.current === null) {
@@ -37,17 +38,17 @@ export default function Search() {
     prevDepsRef.current = depsKey;
 
     if (hasSearched && query.trim()) {
-      search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters));
+      search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters), 1, searchField);
     }
-  }, [depsKey, hasSearched, query, search, selectedUserId, enablePersonalization, filters]);
+  }, [depsKey, hasSearched, query, search, selectedUserId, enablePersonalization, filters, searchField]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
       toast({ title: 'Введите поисковый запрос', description: 'Поле поиска не может быть пустым', variant: 'destructive' });
       return;
     }
-    await search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters));
-  }, [query, search, selectedUserId, enablePersonalization, filters, toast]);
+    await search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters), 1, searchField);
+  }, [query, search, selectedUserId, enablePersonalization, filters, searchField, toast]);
 
   const onDocumentClick = useCallback((doc: DocumentResult) => {
     handleDocumentClick(doc, selectedUserId ?? undefined);
@@ -65,6 +66,8 @@ export default function Search() {
         enablePersonalization={enablePersonalization}
         onPersonalizationChange={setEnablePersonalization}
         selectedUser={selectedUser}
+        searchField={searchField}
+        onSearchFieldChange={setSearchField}
       />
 
       <div className="container mx-auto px-4 py-6 lg:py-8">

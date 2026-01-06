@@ -1,6 +1,9 @@
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
+
+
+SearchFieldType = Literal["all", "title", "authors", "subjects", "collection"]
 
 
 class SearchRequest(BaseModel):
@@ -11,6 +14,7 @@ class SearchRequest(BaseModel):
     per_page: int = Field(20, ge=1, le=100, description="Results per page")
     filters: Optional[Dict[str, Any]] = Field(None, description="Optional filters")
     session_id: Optional[str] = Field(None, description="Session ID for tracking")
+    search_field: SearchFieldType = Field("all", description="Field to search in")
 
 
 class ClickEvent(BaseModel):

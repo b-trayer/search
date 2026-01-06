@@ -134,7 +134,7 @@ class TestSearchEndpoint:
 
 class TestClickEndpoint:
 
-    @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.interactions.AsyncSearchEngine")
     async def test_register_click_success(
         self, mock_engine_class, client: AsyncClient
     ):
@@ -165,7 +165,7 @@ class TestClickEndpoint:
         )
         assert response.status_code == 422
 
-    @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.interactions.AsyncSearchEngine")
     async def test_click_database_error_returns_503(
         self, mock_engine_class, client: AsyncClient
     ):
@@ -195,7 +195,7 @@ class TestClickEndpoint:
 
 class TestFiltersEndpoint:
 
-    @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.interactions.AsyncSearchEngine")
     async def test_get_filters_success(
         self, mock_engine_class, client: AsyncClient
     ):
@@ -216,7 +216,7 @@ class TestFiltersEndpoint:
         data = response.json()
         assert "document_types" in data
 
-    @patch("backend.app.api.search.AsyncSearchEngine")
+    @patch("backend.app.api.interactions.AsyncSearchEngine")
     async def test_filters_database_error_returns_503(
         self, mock_engine_class, client: AsyncClient
     ):

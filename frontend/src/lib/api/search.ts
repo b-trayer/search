@@ -1,4 +1,4 @@
-import type { SearchResponse, SearchFilters, FilterOptions, ClickData } from '../types';
+import type { SearchResponse, SearchFilters, FilterOptions, ClickData, SearchField } from '../types';
 import { API_BASE, safeFetch, handleResponse, parseErrorResponse, ApiError } from './client';
 
 export async function searchDocuments(
@@ -7,7 +7,8 @@ export async function searchDocuments(
   enablePersonalization: boolean = true,
   page: number = 1,
   perPage: number = 20,
-  filters?: SearchFilters
+  filters?: SearchFilters,
+  searchField: SearchField = 'all'
 ): Promise<SearchResponse> {
   const response = await safeFetch(`${API_BASE}/api/v1/search/`, {
     method: 'POST',
@@ -19,6 +20,7 @@ export async function searchDocuments(
       per_page: perPage,
       enable_personalization: enablePersonalization,
       filters,
+      search_field: searchField,
     }),
   });
 

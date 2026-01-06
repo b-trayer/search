@@ -2,8 +2,17 @@
 import { GraduationCap, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SearchBar from '@/components/search-bar';
-import type { User } from '@/lib/types';
+import type { User, SearchField } from '@/lib/types';
+
+const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
+  { value: 'all', label: 'Везде' },
+  { value: 'title', label: 'В названии' },
+  { value: 'authors', label: 'В авторах' },
+  { value: 'subjects', label: 'В темах' },
+  { value: 'collection', label: 'В коллекции' },
+];
 
 interface SearchHeroProps {
   query: string;
@@ -13,6 +22,8 @@ interface SearchHeroProps {
   enablePersonalization: boolean;
   onPersonalizationChange: (enabled: boolean) => void;
   selectedUser: User | null;
+  searchField: SearchField;
+  onSearchFieldChange: (field: SearchField) => void;
 }
 
 export default function SearchHero({
@@ -23,6 +34,8 @@ export default function SearchHero({
   enablePersonalization,
   onPersonalizationChange,
   selectedUser,
+  searchField,
+  onSearchFieldChange,
 }: SearchHeroProps) {
   return (
     <section className="py-8 sm:py-12 bg-notion-bg-secondary">
@@ -51,6 +64,31 @@ export default function SearchHero({
               onSearch={onSearch}
               isLoading={isLoading}
             />
+
+            <RadioGroup
+              value={searchField}
+              onValueChange={(value) => onSearchFieldChange(value as SearchField)}
+              className="flex flex-wrap justify-center gap-2 sm:gap-4"
+            >
+              {SEARCH_FIELD_OPTIONS.map((option) => (
+                <div key={option.value} className="flex items-center">
+                  <RadioGroupItem
+                    value={option.value}
+                    id={`search-field-${option.value}`}
+                    className="sr-only peer"
+                  />
+                  <Label
+                    htmlFor={`search-field-${option.value}`}
+                    className="px-3 py-1.5 text-xs sm:text-sm rounded-notion cursor-pointer transition-colors
+                      bg-notion-bg border border-notion-border text-notion-text-secondary
+                      peer-data-[state=checked]:bg-notion-accent peer-data-[state=checked]:text-white peer-data-[state=checked]:border-notion-accent
+                      hover:bg-notion-bg-hover"
+                  >
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
 
             <div className="flex items-center gap-2 sm:gap-3">
               <Switch

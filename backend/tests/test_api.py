@@ -312,9 +312,9 @@ class TestUsersAPI:
 
 class TestClickAPI:
 
-    @patch("backend.app.api.search.AsyncSearchEngine")
-    @patch("backend.app.api.search.get_opensearch_client")
-    @patch("backend.app.api.search.get_async_db")
+    @patch("backend.app.api.interactions.AsyncSearchEngine")
+    @patch("backend.app.api.interactions.get_opensearch_client")
+    @patch("backend.app.api.interactions.get_async_db")
     def test_register_click(self, mock_get_db, mock_get_opensearch, mock_engine_class, client):
         mock_db = AsyncMock()
         mock_get_db.return_value = mock_db

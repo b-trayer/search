@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Literal
 
 
 SEARCH_FIELDS = [
@@ -11,11 +11,22 @@ SEARCH_FIELDS = [
     "publication_info"
 ]
 
+FIELD_SPECIFIC_SEARCH: Dict[str, List[str]] = {
+    "title": ["title^3"],
+    "authors": ["authors^2"],
+    "subjects": ["subjects^2"],
+    "collection": ["collection^1.5"],
+}
+
 HIGHLIGHT_FIELDS = ["title", "authors", "subjects", "collection"]
 
 
-def build_search_query(query: str, filters: Optional[Dict] = None) -> Dict[str, Any]:
-    must_clauses = [_build_multi_match_clause(query)]
+def build_search_query(
+    query: str,
+    filters: Optional[Dict] = None,
+    search_field: str = "all"
+) -> Dict[str, Any]:
+    must_clauses = [_build_multi_match_clause(query, search_field)]
     filter_clauses = _build_filter_clauses(filters) if filters else []
 
     return {
@@ -34,11 +45,12 @@ def build_search_query(query: str, filters: Optional[Dict] = None) -> Dict[str, 
     }
 
 
-def _build_multi_match_clause(query: str) -> Dict[str, Any]:
+def _build_multi_match_clause(query: str, search_field: str = "all") -> Dict[str, Any]:
+    fields = FIELD_SPECIFIC_SEARCH.get(search_field, SEARCH_FIELDS)
     return {
         "multi_match": {
             "query": query,
-            "fields": SEARCH_FIELDS,
+            "fields": fields,
             "fuzziness": "AUTO",
             "type": "best_fields",
             "operator": "or",

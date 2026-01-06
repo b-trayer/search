@@ -1,4 +1,4 @@
-
+export type SearchField = 'all' | 'title' | 'authors' | 'subjects' | 'collection';
 
 export interface User {
   user_id: number;

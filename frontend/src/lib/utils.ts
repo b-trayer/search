@@ -75,12 +75,19 @@ export function formatBadgeText(text: string): string {
 export function uniqueBadges(items: string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
+
   for (const item of items) {
     const formatted = formatBadgeText(item);
-    const lower = formatted.toLowerCase();
-    if (formatted && !seen.has(lower)) {
-      seen.add(lower);
-      result.push(formatted);
+    const parts = formatted
+      .split(/(?<=[а-яё])\s+(?=[А-ЯЁA-Z])|[;,]/)
+      .map(p => p.trim().toLowerCase())
+      .filter(p => p.length > 0);
+
+    for (const part of parts) {
+      if (!seen.has(part)) {
+        seen.add(part);
+        result.push(part);
+      }
     }
   }
   return result;

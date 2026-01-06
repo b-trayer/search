@@ -1,5 +1,5 @@
 import { searchDocuments } from '@/lib/api';
-import type { SearchFilters } from '@/lib/types';
+import type { SearchFilters, SearchField } from '@/lib/types';
 import type { SearchAction } from '../search-reducer';
 import { calculateAvgCtr, handleImpressions, handleSearchError } from './search-utils';
 
@@ -20,18 +20,19 @@ export function createSearchAction({
     userId?: number,
     enablePersonalization: boolean = true,
     filters?: SearchFilters,
-    page: number = 1
+    page: number = 1,
+    searchField: SearchField = 'all'
   ) => {
     if (!query.trim()) {
       dispatch({ type: 'SET_EMPTY_QUERY_ERROR' });
       return;
     }
 
-    dispatch({ type: 'SET_LAST_PARAMS', payload: { userId, enablePersonalization, filters } });
+    dispatch({ type: 'SET_LAST_PARAMS', payload: { userId, enablePersonalization, filters, searchField } });
     dispatch({ type: 'SEARCH_START' });
 
     try {
-      const response = await searchDocuments(query, userId, enablePersonalization, page, perPage, filters);
+      const response = await searchDocuments(query, userId, enablePersonalization, page, perPage, filters, searchField);
 
       dispatch({
         type: 'SEARCH_SUCCESS',

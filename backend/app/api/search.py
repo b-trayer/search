@@ -34,5 +34,6 @@ async def search_documents(
         page=search_request.page,
         per_page=search_request.per_page,
         enable_personalization=search_request.enable_personalization,
-        filters=search_request.filters
+        filters=search_request.filters,
+        search_field=search_request.search_field
     )

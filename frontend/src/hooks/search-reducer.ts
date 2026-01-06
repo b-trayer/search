@@ -1,69 +1,11 @@
-import type { DocumentResult, UserProfile, SearchStats, SearchFilters } from '@/lib/types';
-
-export interface SearchState {
-  query: string;
-  results: DocumentResult[];
-  isLoading: boolean;
-  hasSearched: boolean;
-  totalResults: number;
-  page: number;
-  totalPages: number;
-  isPersonalized: boolean;
-  userProfile: UserProfile | null;
-  stats: SearchStats;
-  error: string | null;
-  errorCode: string | null;
-  isRetryable: boolean;
-  totalImpressions: number;
-  lastSearchParams: {
-    userId?: number;
-    enablePersonalization: boolean;
-    filters?: SearchFilters;
-  } | null;
-}
-
-export type SearchAction =
-  | { type: 'SET_QUERY'; payload: string }
-  | { type: 'SEARCH_START' }
-  | { type: 'SEARCH_SUCCESS'; payload: { results: DocumentResult[]; total: number; page: number; totalPages: number; personalized: boolean; userProfile: UserProfile | null } }
-  | { type: 'SEARCH_ERROR'; payload: { error: string; errorCode: string; isRetryable: boolean } }
-  | { type: 'SET_STATS'; payload: SearchStats }
-  | { type: 'SET_IMPRESSIONS'; payload: number }
-  | { type: 'SET_LAST_PARAMS'; payload: SearchState['lastSearchParams'] }
-  | { type: 'RESET' }
-  | { type: 'SET_EMPTY_QUERY_ERROR' }
-  | { type: 'SET_PAGE'; payload: number }
-  | { type: 'INCREMENT_CLICK'; payload: string };
-
-export const DEFAULT_STATS: SearchStats = {
-  totalResults: 0,
-  avgCTR: 0,
-  impressions: 0,
-};
-
-export const initialSearchState: SearchState = {
-  query: '',
-  results: [],
-  isLoading: false,
-  hasSearched: false,
-  totalResults: 0,
-  page: 1,
-  totalPages: 1,
-  isPersonalized: false,
-  userProfile: null,
-  stats: DEFAULT_STATS,
-  error: null,
-  errorCode: null,
-  isRetryable: false,
-  totalImpressions: 0,
-  lastSearchParams: null,
-};
+import type { SearchState, SearchAction } from './search/search-types';
+export type { SearchState, SearchAction } from './search/search-types';
+export { DEFAULT_STATS, initialSearchState } from './search/search-types';
 
 function handleIncrementClick(state: SearchState, documentId: string): SearchState {
-  const updatedResults = state.results.map(doc => {
-    if (doc.document_id !== documentId) return doc;
-    return { ...doc, clicks: doc.clicks + 1 };
-  });
+  const updatedResults = state.results.map(doc =>
+    doc.document_id !== documentId ? doc : { ...doc, clicks: doc.clicks + 1 }
+  );
   return { ...state, results: updatedResults };
 }
 
@@ -73,14 +15,7 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
       return { ...state, query: action.payload };
 
     case 'SEARCH_START':
-      return {
-        ...state,
-        isLoading: true,
-        hasSearched: true,
-        error: null,
-        errorCode: null,
-        isRetryable: false,
-      };
+      return { ...state, isLoading: true, hasSearched: true, error: null, errorCode: null, isRetryable: false };
 
     case 'SEARCH_SUCCESS':
       return {
@@ -117,15 +52,10 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
       return { ...state, lastSearchParams: action.payload };
 
     case 'SET_EMPTY_QUERY_ERROR':
-      return {
-        ...state,
-        error: 'Введите поисковый запрос',
-        errorCode: 'EMPTY_QUERY',
-        isRetryable: false,
-      };
+      return { ...state, error: 'Введите поисковый запрос', errorCode: 'EMPTY_QUERY', isRetryable: false };
 
     case 'RESET':
-      return { ...initialSearchState, totalImpressions: state.totalImpressions };
+      return { ...state, query: '', results: [], isLoading: false, hasSearched: false, totalResults: 0, page: 1, totalPages: 1, isPersonalized: false, userProfile: null, stats: { totalResults: 0, avgCTR: 0, impressions: 0 }, error: null, errorCode: null, isRetryable: false, lastSearchParams: null };
 
     case 'INCREMENT_CLICK':
       return handleIncrementClick(state, action.payload);
