@@ -1,0 +1,38 @@
+%% Рисунок 3.4 — Конвейер подбора гиперпараметров формулы (2.1).
+%% Показывает три уровня вложенности: внешний цикл k-fold cross-validation
+%% по запросам, средний цикл оптимизатора (grid / random / TPE / MAB),
+%% внутренний цикл оценки одной точки theta — поисковый прогон
+%% и расчет nDCG@10 (full) на оракуле.
+flowchart TB
+    subgraph CV["Внешний цикл: k-fold cross-validation по запросам Q (k=5)"]
+        direction TB
+        Split["Разбиение Q на k фолдов\nQ = Q_train ∪ Q_val"]
+        OuterAgg["Усреднение nDCG@10\nпо k фолдам"]
+    end
+
+    subgraph OPT["Средний цикл: оптимизатор гиперпараметров"]
+        direction TB
+        Init["Инициализация\nпространства Θ"]
+        Suggest["Предложение точки θ\n(grid / random / TPE / MAB)"]
+        Update["Обновление состояния\n(history / surrogate / posterior)"]
+        Stop{"Бюджет\nисчерпан?"}
+        Best["argmax θ*"]
+    end
+
+    subgraph EVAL["Внутренний цикл: оценка одной точки θ"]
+        direction TB
+        SetWeights["PUT /api/settings/weights"]
+        Run["search.run(Q_train, θ)"]
+        Score["nDCG@10(full) на Q_val\nпо detailed-оракулу"]
+    end
+
+    Split --> Init
+    Init --> Suggest
+    Suggest --> SetWeights
+    SetWeights --> Run --> Score
+    Score --> Update
+    Update --> Stop
+    Stop -- "нет" --> Suggest
+    Stop -- "да"  --> Best
+    Best --> OuterAgg
+    OuterAgg --> Final[("θ* и интервал\nпо фолдам")]

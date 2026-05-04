@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ═══════════════════════════════════════════
+       NOTION DESIGN SYSTEM TOKENS
+       ═══════════════════════════════════════════ */
+
+    /* Background */
+    --notion-bg-primary: #ffffff;
+    --notion-bg-secondary: #f7f6f3;
+    --notion-bg-tertiary: #f1f1ef;
+    --notion-bg-hover: rgba(55, 53, 47, 0.04);
+    --notion-bg-active: rgba(55, 53, 47, 0.08);
+
+    /* Text */
+    --notion-text-primary: #37352f;
+    --notion-text-secondary: #6b6b6b;
+    --notion-text-tertiary: #9b9a97;
+    --notion-text-placeholder: #c4c4c4;
+
+    /* Borders */
+    --notion-border-default: rgba(55, 53, 47, 0.09);
+    --notion-border-strong: rgba(55, 53, 47, 0.16);
+
+    /* Accent */
+    --notion-accent: #2383e2;
+    --notion-accent-hover: #1a73d4;
+    --notion-accent-light: rgba(35, 131, 226, 0.1);
+
+    /* Status */
+    --notion-success: #0f7b6c;
+    --notion-success-light: rgba(15, 123, 108, 0.1);
+    --notion-warning: #d9730d;
+    --notion-warning-light: rgba(217, 115, 13, 0.1);
+    --notion-error: #e03e3e;
+    --notion-error-light: rgba(224, 62, 62, 0.1);
+
+    /* Shadows */
+    --notion-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --notion-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+    --notion-shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.04);
+
+    /* Radius */
+    --notion-radius-sm: 4px;
+    --notion-radius-md: 6px;
+    --notion-radius-lg: 8px;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* ═══════════════════════════════════════════
+       SHADCN/UI COMPATIBILITY (HSL)
+       ═══════════════════════════════════════════ */
+    --background: 0 0% 100%;
+    --foreground: 30 6% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 6% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 6% 20%;
+
+    --primary: 30 6% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 10% 96%;
+    --secondary-foreground: 30 6% 20%;
+
+    --muted: 40 10% 96%;
+    --muted-foreground: 0 0% 42%;
+
+    --accent: 210 79% 51%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 6% 20% / 0.09;
+    --input: 30 6% 20% / 0.09;
+    --ring: 210 79% 51%;
+
+    --radius: 6px;
+
+    /* Custom library colors */
+    --library-amber: 35 90% 50%;
+    --library-brown: 0 0% 30%;
+    --library-cream: 0 0% 98%;
+    --library-gold: 42 85% 55%;
+
+    /* Highlight colors */
+    --highlight: 48 100% 50%;
+    --highlight-soft: 48 100% 90%;
+
+    --sidebar-background: 40 10% 97%;
+    --sidebar-foreground: 30 6% 20%;
+    --sidebar-primary: 30 6% 20%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 10% 96%;
+    --sidebar-accent-foreground: 30 6% 20%;
+    --sidebar-border: 30 6% 20% / 0.09;
+    --sidebar-ring: 210 79% 51%;
+  }
+
+  .dark {
+    /* Notion dark mode tokens */
+    --notion-bg-primary: #191919;
+    --notion-bg-secondary: #202020;
+    --notion-bg-tertiary: #2f2f2f;
+    --notion-bg-hover: rgba(255, 255, 255, 0.055);
+    --notion-bg-active: rgba(255, 255, 255, 0.1);
+
+    --notion-text-primary: rgba(255, 255, 255, 0.9);
+    --notion-text-secondary: rgba(255, 255, 255, 0.6);
+    --notion-text-tertiary: rgba(255, 255, 255, 0.4);
+
+    --notion-border-default: rgba(255, 255, 255, 0.094);
+    --notion-border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Shadcn/UI dark mode */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 210 79% 51%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100% / 0.09;
+    --input: 0 0% 100% / 0.09;
+    --ring: 210 79% 51%;
+
+    --library-amber: 35 80% 55%;
+    --library-brown: 0 0% 60%;
+    --library-cream: 0 0% 15%;
+    --library-gold: 42 75% 50%;
+
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 95%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 100% / 0.09;
+    --sidebar-ring: 210 79% 51%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    margin: 0 !important;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+  }
+
+  /* Prevent iOS Safari from zooming when focusing form fields with <16px text. */
+  @media (max-width: 640px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    color: var(--notion-text-primary);
+    background: var(--notion-bg-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-sans);
+  }
+
+  /* Notion shadow utilities */
+  .shadow-notion-sm {
+    box-shadow: var(--notion-shadow-sm);
+  }
+
+  .shadow-notion-md {
+    box-shadow: var(--notion-shadow-md);
+  }
+
+  .shadow-notion-lg {
+    box-shadow: var(--notion-shadow-lg);
+  }
+
+  /* Legacy compatibility */
+  .shadow-soft {
+    box-shadow: var(--notion-shadow-sm);
+  }
+
+  .shadow-card {
+    box-shadow: var(--notion-shadow-sm);
+  }
+
+  /* Notion radius utilities */
+  .rounded-notion {
+    border-radius: var(--notion-radius-md);
+  }
+
+  .rounded-notion-sm {
+    border-radius: var(--notion-radius-sm);
+  }
+
+  .rounded-notion-lg {
+    border-radius: var(--notion-radius-lg);
+  }
+}

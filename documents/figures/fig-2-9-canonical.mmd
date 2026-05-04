@@ -1,0 +1,71 @@
+%% Рисунок 2.9 — Канонизация типа документа.
+%% Сводит 23 наблюдаемых значения document_type из объединённого корпуса
+%% e-lib.nsu.ru и ruslan-neo.nsu.ru к 5 каноническим классам матрицы
+%% предпочтений ROLE_TYPE_MATRIX, плюс служебный класс "other"
+%% для типов, которые не относятся к учебной/научной литературе.
+
+flowchart LR
+    subgraph Raw["23 наблюдаемых значения document_type"]
+        direction TB
+        R1["textbook"]
+        R2["Учебник"]
+        R3["manual"]
+        R4["tutorial"]
+        R5["methodical"]
+        R6["monograph"]
+        R7["book"]
+        R8["collection"]
+        R9["Другой"]
+        R10["dissertation"]
+        R11["doctoral_dissertation"]
+        R12["autoreferat"]
+        R13["Диссертация"]
+        R14["article"]
+        R15["nsu_article"]
+        R16["book_article"]
+        R17["Статья, доклад"]
+        R18["serial"]
+        R19["Журнал, газета"]
+        R20["proceedings"]
+        R21["reference / dictionary"]
+        R22["electronic / electronic_copy / network_resource"]
+        R23["Видео"]
+    end
+
+    C1["textbook"]
+    C2["tutorial"]
+    C3["monograph"]
+    C4["dissertation"]
+    C5["article"]
+    C6["other (f_type = 0)"]
+
+    R1 --> C1
+    R2 --> C1
+    R3 --> C1
+    R4 --> C2
+    R5 --> C2
+    R6 --> C3
+    R7 --> C3
+    R8 --> C3
+    R9 --> C3
+    R10 --> C4
+    R11 --> C4
+    R12 --> C4
+    R13 --> C4
+    R14 --> C5
+    R15 --> C5
+    R16 --> C5
+    R17 --> C5
+    R18 --> C5
+    R19 --> C5
+    R20 --> C5
+    R21 --> C6
+    R22 --> C6
+    R23 --> C6
+
+    classDef raw fill:#ffffff,stroke:#37352f33,color:#37352f,stroke-width:1px
+    classDef canon fill:#0f7b6c1a,stroke:#0f7b6c,color:#0f7b6c,stroke-width:1.5px
+    classDef other fill:#9b9a971a,stroke:#9b9a97,color:#6b6b6b,stroke-width:1px,stroke-dasharray:3 3
+    class R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15,R16,R17,R18,R19,R20,R21,R22,R23 raw
+    class C1,C2,C3,C4,C5 canon
+    class C6 other

@@ -1,0 +1,42 @@
+%% Рисунок 3.1 — Двухконтурный дизайн исследования.
+%% Внешний контур (offline) опирается на детерминированный оракул и
+%% статическую коллекцию запросов; служит фильтром перед запуском
+%% дорогого онлайн-эксперимента. Внутренний контур (online) измеряет
+%% реальное поведение пользователей и принимает окончательное решение
+%% о развертывании. Пилотное исследование (3.7) — иллюстрация
+%% работоспособности offline-контура на реальном стенде.
+
+flowchart TB
+    subgraph OFF["Контур 1. Offline: детерминированный оракул"]
+        direction TB
+        Coll[("Коллекция Q\n80–100 запросов\n(3 класса)")]
+        Pres["Конфигурации C0..C4\n(см. 3.4.1)"]
+        Harness["Harness 2.10\n(eval_oracle + metrics)"]
+        Tune["Подбор гиперпараметров\n(grid → TPE → UCB)"]
+        Stat["Парный Уилкоксон + Хольм\nдоверительные интервалы"]
+        Coll --> Harness
+        Pres --> Harness
+        Harness --> Stat
+        Stat --> Tune
+        Tune --> ThetaStar([θ*])
+    end
+
+    subgraph PILOT["Пилот (3.7) — иллюстрация работоспособности"]
+        direction TB
+        Run["18 запросов × 4 пресета\nна anyasthesis.ru\n234 секунды"]
+        Snap[("pilot-prod-2026-05-01\n.md / .csv")]
+        Run --> Snap
+    end
+
+    subgraph ON["Контур 2. Online: реальные пользователи"]
+        direction TB
+        Strat["Стратификация\n(role × specialization)"]
+        AB["A/B-эксперимент\nbm25_only vs θ*"]
+        Guard["Guardrail-проверка\nlatency, errors, empty"]
+        Decide["Дерево решений (рис. 3.7)"]
+        Strat --> AB --> Guard --> Decide
+    end
+
+    Harness -.->|"snapshot"| Run
+    ThetaStar --> AB
+    Decide --> Deploy([Раскатка / Откат])

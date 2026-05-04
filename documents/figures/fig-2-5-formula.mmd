@@ -1,0 +1,53 @@
+%% Рисунок 2.5 — Декомпозиция итоговой формулы ранжирования.
+%% На вход функции ранжирования подаются три объекта: запрос Q, документ D
+%% и профиль пользователя U. Каждое из трёх слагаемых формулы (2.1)
+%% соответствует одной отдельной ветви и собирается в итоговый score(D,Q,U).
+
+flowchart TB
+    Q["Запрос Q"]
+    D["Документ D"]
+    U["Профиль U: роль, специализация, интересы"]
+
+    subgraph Lex["Лексический компонент"]
+        BM25["BM25F(Q, D)"]
+        LBM["log(1 + BM25F)"]
+        BM25 --> LBM
+    end
+
+    subgraph Pers["Компонент персонализации"]
+        FT["f_type(D, U) = P(canonical_type | role)"]
+        FTP["f_topic(D, U) = base + bonus"]
+        FU["f(U,D) = a1·f_type + a2·f_topic"]
+        WU["w_u · f(U,D)"]
+        FT --> FU
+        FTP --> FU
+        FU --> WU
+    end
+
+    subgraph Beh["Поведенческий компонент"]
+        Smooth["CTR_smoothed = (clicks + alpha) / (impr + alpha + beta)"]
+        LCTR["log(1 + 10 · CTR_smoothed)"]
+        BCTR["beta_ctr · log(1 + 10 · CTR_smoothed)"]
+        Smooth --> LCTR --> BCTR
+    end
+
+    Q --> BM25
+    D --> BM25
+    D --> FT
+    D --> FTP
+    U --> FT
+    U --> FTP
+    Q --> Smooth
+    D --> Smooth
+
+    LBM --> Sum(("+"))
+    WU --> Sum
+    BCTR --> Sum
+    Sum --> Score["score(D, Q, U)"]
+
+    classDef compBox fill:#f7f6f3,stroke:#37352f33,stroke-width:1px,color:#37352f
+    classDef inputs fill:#ffffff,stroke:#37352f99,color:#37352f,stroke-width:1px
+    classDef output fill:#2383e21a,stroke:#2383e2,color:#1a73d4,stroke-width:1.5px
+    class Q,D,U inputs
+    class Lex,Pers,Beh compBox
+    class Score output

@@ -1,0 +1,43 @@
+%% Рисунок 2.10 — Контур стенда экспериментальной оценки.
+%% На вход подаётся фиксированная коллекция запросов queries.jsonl и
+%% список конфигураций ранжирования (presets). Скрипт run_evaluation.py
+%% последовательно прогоняет каждую пару (запрос, конфигурация) через
+%% живой API подсистемы, подаёт ответ детерминированному оракулу
+%% релевантности (eval_oracle.py) и считает метрики (metrics.py).
+%% Результат собирается в Markdown-таблицу и CSV для дальнейшего
+%% анализа в главе 3.
+
+flowchart LR
+    Q[("queries.jsonl<br/>18 запросов")]
+    P[("presets:<br/>default, bm25_only,<br/>high_personalization, ...")]
+    Runner["scripts/run_evaluation.py"]
+    API["FastAPI: /api/v1/search"]
+    SE["AsyncSearchEngine + RankingFormula"]
+    OS[("OpenSearch<br/>library_documents")]
+    PG[("PostgreSQL<br/>users, ctr_stats")]
+    Oracle["eval_oracle.py<br/>topical_relevance / full_relevance"]
+    Metrics["metrics.py<br/>P@k, R@k, MAP, MRR, nDCG@k"]
+    Agg["Агрегация по<br/>конфигурации x оракул"]
+    MD[("data/eval/report.md")]
+    CSV[("data/eval/report.csv")]
+
+    Q --> Runner
+    P --> Runner
+    Runner -- "POST {query, user_id, weights}" --> API
+    API --> SE
+    SE -- "BM25F" --> OS
+    SE -- "user, CTR" --> PG
+    SE -- "ранжированный список" --> API
+    API -- "результаты + score breakdown" --> Runner
+    Runner --> Oracle
+    Oracle -- "gain map" --> Metrics
+    Metrics --> Agg
+    Agg --> MD
+    Agg --> CSV
+
+    classDef store fill:#f7f6f3,stroke:#37352f33,color:#37352f
+    classDef code fill:#ffffff,stroke:#37352f99,color:#37352f,stroke-width:1px
+    classDef out fill:#2383e21a,stroke:#2383e2,color:#1a73d4,stroke-width:1.5px
+    class Q,P,OS,PG store
+    class Runner,API,SE,Oracle,Metrics,Agg code
+    class MD,CSV out
