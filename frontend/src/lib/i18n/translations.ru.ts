@@ -124,7 +124,10 @@ export const ru: TranslationDict = {
   'interests.limitReached': 'Достигнут лимит в {{count}} интересов',
   'interests.removeAria': 'Удалить «{{value}}»',
   'interests.savedTitle': 'Интересы обновлены',
-  'interests.savedDesc': 'Сохранено элементов: {{count}}',
+  'interests.savedDesc': 'Сохранено {{count}} {{noun}}',
+  'interests.savedNoun.one': 'интерес',
+  'interests.savedNoun.few': 'интереса',
+  'interests.savedNoun.many': 'интересов',
   'interests.errorTitle': 'Ошибка сохранения',
   'interests.errorFallback': 'Не удалось сохранить интересы',
 
@@ -335,7 +338,7 @@ export const ru: TranslationDict = {
   'diff.group.topics': 'Скоры f_topic',
   'diff.group.specializations': 'Специализации',
   'diff.applyAndSave': 'Применить и сохранить',
-  'diff.wordsCount': '{{count}} слов',
+  'diff.wordsCount': '{{count}} ключевых слов',
 
   'import.title': 'Импорт настроек',
   'import.desc': 'Что именно применить из загруженного файла? После применения нажмите «Сохранить» в шапке.',

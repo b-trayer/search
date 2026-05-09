@@ -41,7 +41,7 @@ export const InterestsEditorDialog = ({
   const [draft, setDraft] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, plural } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -80,9 +80,13 @@ export const InterestsEditorDialog = ({
     try {
       const updated = await updateUserInterests(user.user_id, items);
       onSaved(updated);
+      const savedCount = updated.interests?.length ?? 0;
       toast({
         title: t('interests.savedTitle'),
-        description: t('interests.savedDesc', { count: updated.interests?.length ?? 0 }),
+        description: t('interests.savedDesc', {
+          count: savedCount,
+          noun: plural('interests.savedNoun', savedCount),
+        }),
       });
       onOpenChange(false);
     } catch (error) {
