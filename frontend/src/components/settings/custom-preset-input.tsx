@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Check, Plus, X } from 'lucide-react';
 import { HEADER_CHIP } from '@/components/layout/header-chip';
+import { useTranslation } from '@/lib/i18n';
 
 interface CustomPresetInputProps {
   disabled?: boolean;
@@ -12,6 +13,7 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const reset = () => {
     setEditing(false);
@@ -22,15 +24,15 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
   const handleSave = async () => {
     const trimmed = value.trim();
     if (!trimmed) {
-      setError('Введите название');
+      setError(t('customPreset.errorEmpty'));
       return;
     }
     if (trimmed.length > 50) {
-      setError('Слишком длинное название');
+      setError(t('customPreset.errorTooLong'));
       return;
     }
     if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
-      setError('Уже есть пресет с таким именем');
+      setError(t('customPreset.errorDup'));
       return;
     }
     await onSave(trimmed);
@@ -54,10 +56,10 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
         onClick={() => setEditing(true)}
         disabled={disabled}
         className={HEADER_CHIP}
-        title="Сохранить текущие веса как именованный пресет"
+        title={t('customPreset.title')}
       >
         <Plus className="h-4 w-4" />
-        Сохранить как пресет…
+        {t('customPreset.add')}
       </button>
     );
   }
@@ -72,7 +74,7 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
           setError(null);
         }}
         onKeyDown={handleKey}
-        placeholder="Название пресета"
+        placeholder={t('customPreset.placeholder')}
         className="h-8 w-44 rounded-notion border border-notion-border bg-notion-bg px-2 text-xs text-notion-text outline-none focus:border-notion-accent"
       />
       <button
@@ -80,7 +82,7 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
         onClick={handleSave}
         disabled={disabled}
         className="inline-flex h-8 w-8 items-center justify-center rounded-notion bg-notion-accent text-white transition-colors hover:bg-notion-accent-hover disabled:opacity-50"
-        title="Сохранить"
+        title={t('common.save')}
       >
         <Check className="h-3.5 w-3.5" />
       </button>
@@ -88,7 +90,7 @@ export function CustomPresetInput({ disabled, existingNames, onSave }: CustomPre
         type="button"
         onClick={reset}
         className="inline-flex h-8 w-8 items-center justify-center rounded-notion text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
-        title="Отмена"
+        title={t('common.cancel')}
       >
         <X className="h-3.5 w-3.5" />
       </button>

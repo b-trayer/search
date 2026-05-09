@@ -8,6 +8,7 @@ import {
   getDatabaseLabel,
 } from '@/components/filters';
 import { YearRangeSection } from '@/components/filters/year-range-section';
+import { useTranslation } from '@/lib/i18n';
 import type { FilterOptions } from '@/lib/types';
 import type { Filters } from '@/hooks/use-filters';
 
@@ -48,6 +49,7 @@ export const FilterContent = ({
   totalSelected,
   variant,
 }: FilterContentProps) => {
+  const { t } = useTranslation();
   const hasYearData =
     filterOptions.year_range.min !== null && filterOptions.year_range.max !== null;
   const hasDatabases = filterOptions.databases.length >= MIN_OPTIONS_FOR_SECTION;
@@ -63,7 +65,7 @@ export const FilterContent = ({
         <FilterPanelHeader totalSelected={totalSelected} onReset={onReset} />
       )}
       <ScrollArea className={variant === 'mobile' ? 'h-full' : 'h-[calc(100vh-200px)]'}>
-        <div className="space-y-1 p-4">
+        <div className="space-y-1 py-4 pl-4 pr-5">
           {hasYearData && (
             <>
               <YearRangeSection
@@ -79,7 +81,7 @@ export const FilterContent = ({
           {hasDatabases && (
             <>
               <FilterSection
-                title="Каталог"
+                title={t('filters.catalog')}
                 icon={Layers}
                 items={filterOptions.databases}
                 selected={filters.databases}
@@ -94,7 +96,7 @@ export const FilterContent = ({
           {hasDocTypes && (
             <>
               <FilterSection
-                title="Тип документа"
+                title={t('filters.docType')}
                 icon={FileText}
                 items={mergedDocTypes}
                 selected={mergedDocTypes
@@ -110,7 +112,7 @@ export const FilterContent = ({
           {hasCollections && (
             <>
               <FilterSection
-                title="Коллекция"
+                title={t('filters.collection')}
                 icon={BookOpen}
                 items={filterOptions.collections}
                 selected={filters.collections}
@@ -124,7 +126,7 @@ export const FilterContent = ({
           {hasKnowledgeAreas && (
             <>
               <FilterSection
-                title="Область знания"
+                title={t('filters.knowledgeAreas')}
                 icon={Tag}
                 items={filterOptions.knowledge_areas}
                 selected={filters.knowledge_areas}
@@ -138,7 +140,7 @@ export const FilterContent = ({
           {hasLanguages && (
             <>
               <FilterSection
-                title="Язык"
+                title={t('filters.languages')}
                 icon={Globe}
                 items={filterOptions.languages}
                 selected={filters.languages}

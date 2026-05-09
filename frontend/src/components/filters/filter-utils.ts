@@ -1,54 +1,83 @@
 import type { FilterItem } from '@/lib/types';
+import { getLanguage } from '@/lib/i18n';
+import { ru } from '@/lib/i18n/translations.ru';
+import { en } from '@/lib/i18n/translations.en';
 
-export const DATABASE_LABELS: Record<string, string> = {
-  ELIB: 'Электронная библиотека НГУ',
-  BOOKS: 'Книги',
-  SERIAL: 'Журналы и периодика',
-  ANALITOLD: 'Статьи (старые)',
-  ANALITNSU: 'Статьи НГУ',
-  ANALITBOOKS: 'Статьи в книгах',
-  ABSTRACT: 'Авторефераты',
-  ELCOPY: 'Электронные копии',
-  ELRES: 'Электронные ресурсы',
-  NETRES: 'Сетевые ресурсы',
+const DICTS = { ru, en } as const;
+
+const DATABASE_KEYS = [
+  'ELIB',
+  'BOOKS',
+  'SERIAL',
+  'ANALITOLD',
+  'ANALITNSU',
+  'ANALITBOOKS',
+  'ABSTRACT',
+  'ELCOPY',
+  'ELRES',
+  'NETRES',
+] as const;
+
+const DOCUMENT_TYPE_KEYS = [
+  'book',
+  'serial',
+  'journal_article',
+  'textbook',
+  'dissertation',
+  'collection',
+  'article',
+  'manual',
+  'methodical',
+  'nsu_article',
+  'monograph',
+  'abstract',
+  'thesis',
+  'conference',
+  'reference',
+  'electronic_copy',
+  'doctoral_dissertation',
+  'proceedings',
+  'tutorial',
+  'electronic',
+  'dictionary',
+  'book_article',
+  'network_resource',
+  'autoreferat',
+] as const;
+
+const RUSSIAN_TO_DOC_KEY: Record<string, (typeof DOCUMENT_TYPE_KEYS)[number]> = {
+  'Учебник': 'textbook',
+  'Диссертация': 'dissertation',
+  'Статья': 'article',
+  'Монография': 'monograph',
+  'Справочник': 'reference',
 };
 
-export const getDatabaseLabel = (name: string): string => DATABASE_LABELS[name] || name;
+function lookupTranslation(prefix: string, key: string): string | null {
+  const dict = DICTS[getLanguage()] ?? DICTS.ru;
+  const value = dict[`${prefix}.${key}`];
+  return typeof value === 'string' ? value : null;
+}
 
-export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  book: 'Книга',
-  serial: 'Периодическое издание',
-  journal_article: 'Статья из журнала',
-  textbook: 'Учебник',
-  'Учебник': 'Учебник',
-  dissertation: 'Диссертация',
-  'Диссертация': 'Диссертация',
-  collection: 'Сборник',
-  article: 'Статья',
-  'Статья': 'Статья',
-  manual: 'Методическое пособие',
-  methodical: 'Методическое пособие',
-  nsu_article: 'Статья НГУ',
-  monograph: 'Монография',
-  'Монография': 'Монография',
-  abstract: 'Реферат',
-  thesis: 'Дипломная работа',
-  conference: 'Материалы конференции',
-  reference: 'Справочник',
-  'Справочник': 'Справочник',
-  electronic_copy: 'Электронная копия',
-  doctoral_dissertation: 'Докторская диссертация',
-  proceedings: 'Труды конференции',
-  tutorial: 'Учебное пособие',
-  electronic: 'Электронный ресурс',
-  dictionary: 'Словарь',
-  book_article: 'Статья из книги',
-  network_resource: 'Сетевой ресурс',
-  autoreferat: 'Автореферат',
+export const DATABASE_LABELS: Record<string, string> = Object.fromEntries(
+  DATABASE_KEYS.map((key) => [key, ru[`db.${key}`] ?? key]),
+) as Record<string, string>;
+
+export const getDatabaseLabel = (name: string): string => {
+  return lookupTranslation('db', name) ?? name;
 };
+
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  DOCUMENT_TYPE_KEYS.map((key) => [key, ru[`dt.${key}`] ?? key]),
+) as Record<string, string>;
 
 export const getDocumentTypeLabel = (name: string): string => {
-  return DOCUMENT_TYPE_LABELS[name] || name;
+  if (DOCUMENT_TYPE_KEYS.includes(name as (typeof DOCUMENT_TYPE_KEYS)[number])) {
+    return lookupTranslation('dt', name) ?? name;
+  }
+  const mapped = RUSSIAN_TO_DOC_KEY[name];
+  if (mapped) return lookupTranslation('dt', mapped) ?? name;
+  return name;
 };
 
 export interface MergedDocTypes {
@@ -73,7 +102,7 @@ export const mergeDocumentTypes = (items: FilterItem[]): MergedDocTypes => {
   const merged: FilterItem[] = [];
   const aliasMap = new Map<string, string[]>();
 
-  for (const [label, data] of labelToItems) {
+  for (const [, data] of labelToItems) {
     const canonicalName = data.names[0];
     merged.push({ name: canonicalName, count: data.count });
     aliasMap.set(canonicalName, data.names);

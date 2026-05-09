@@ -1,4 +1,5 @@
 import type { RankingWeights } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface FormulaPreviewProps {
   weights: RankingWeights;
@@ -10,15 +11,16 @@ function fmt(n: number, digits = 2): string {
 
 export function FormulaPreview({ weights }: FormulaPreviewProps) {
   const { w_user, alpha_type, alpha_topic, beta_ctr, ctr_alpha_prior, ctr_beta_prior } = weights;
+  const { t } = useTranslation();
 
   return (
     <section className="rounded-notion border border-notion-border bg-notion-bg p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-medium text-notion-text">
-          Формула ранжирования
+          {t('formula.title')}
         </h2>
         <span className="text-xs text-notion-text-tertiary">
-          обновляется в реальном времени
+          {t('formula.realtime')}
         </span>
       </div>
 

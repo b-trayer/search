@@ -1,6 +1,7 @@
 import type { SettingsData } from './types';
 import type { RankingWeights } from '@/lib/types';
 import type { RoleTypeMatrix, TopicScores, SpecializationTopics } from '@/lib/api';
+import { translate } from '@/lib/i18n';
 
 export type WeightKey = keyof RankingWeights;
 
@@ -107,8 +108,8 @@ export function buildDiffEntries(data: SettingsData): DiffEntry[] {
         out.push({
           group: 'specializations',
           label: k,
-          before: orig.length === 0 ? '—' : `${orig.length} слов`,
-          after: cur.length === 0 ? '—' : `${cur.length} слов`,
+          before: orig.length === 0 ? '—' : translate('diff.wordsCount', { count: orig.length }),
+          after: cur.length === 0 ? '—' : translate('diff.wordsCount', { count: cur.length }),
         });
       }
     }

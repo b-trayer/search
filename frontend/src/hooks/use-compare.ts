@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { searchDocuments } from '@/lib/api';
 import type { User } from '@/lib/types';
 import { CompareState, createEmptyState, calculateStats } from './compare/compare-types';
+import { translate } from '@/lib/i18n';
 export type { CompareStats } from './compare/compare-types';
 
 export function useCompare() {
@@ -25,7 +26,7 @@ export function useCompare() {
     const leftUserId = overrideLeftUserId !== undefined ? overrideLeftUserId : left.userId;
     const rightUserId = overrideRightUserId !== undefined ? overrideRightUserId : right.userId;
 
-    if (!searchQuery.trim()) { setError('Введите поисковый запрос'); return; }
+    if (!searchQuery.trim()) { setError(translate('search.toast.empty.title')); return; }
     setIsLoading(true);
     setError(null);
 
@@ -36,7 +37,7 @@ export function useCompare() {
       ]);
       setLeft(p => ({ ...p, results: r1.results.slice(0, 10) }));
       setRight(p => ({ ...p, results: r2.results.slice(0, 10) }));
-    } catch { setError('Не удалось выполнить поиск'); }
+    } catch { setError(translate('compare.searchFailed')); }
     finally { setIsLoading(false); }
   }, [query, left.userId, right.userId]);
 

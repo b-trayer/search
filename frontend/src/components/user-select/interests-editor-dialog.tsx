@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { ApiError, updateUserInterests } from "@/lib/api";
 import type { User } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 import { getRoleLabel } from "./user-role-utils";
 
@@ -40,6 +41,7 @@ export const InterestsEditorDialog = ({
   const [draft, setDraft] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -79,17 +81,17 @@ export const InterestsEditorDialog = ({
       const updated = await updateUserInterests(user.user_id, items);
       onSaved(updated);
       toast({
-        title: "Интересы обновлены",
-        description: `Сохранено элементов: ${updated.interests?.length ?? 0}`,
+        title: t('interests.savedTitle'),
+        description: t('interests.savedDesc', { count: updated.interests?.length ?? 0 }),
       });
       onOpenChange(false);
     } catch (error) {
       const message =
         error instanceof ApiError
           ? error.getUserMessage()
-          : "Не удалось сохранить интересы";
+          : t('interests.errorFallback');
       toast({
-        title: "Ошибка сохранения",
+        title: t('interests.errorTitle'),
         description: message,
         variant: "destructive",
       });
@@ -102,10 +104,9 @@ export const InterestsEditorDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Редактирование интересов</DialogTitle>
+          <DialogTitle>{t('interests.title')}</DialogTitle>
           <DialogDescription>
-            Роль и факультет назначены администрацией и не редактируются. Интересы
-            влияют на бонус f_topic в персонализации.
+            {t('interests.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +114,7 @@ export const InterestsEditorDialog = ({
           <div className="font-medium">{user.username}</div>
           <div className="text-muted-foreground text-xs">
             {getRoleLabel(user.role)}
-            {user.course ? `, ${user.course} курс` : ""}
+            {user.course ? `, ${t('preview.userCourse', { n: user.course })}` : ""}
           </div>
           {user.faculty && (
             <div className="text-muted-foreground text-xs">🏛 {user.faculty}</div>
@@ -125,7 +126,7 @@ export const InterestsEditorDialog = ({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Интересы</span>
+            <span>{t('interests.list')}</span>
             <span>
               {items.length} / {MAX_INTERESTS}
             </span>
@@ -133,7 +134,7 @@ export const InterestsEditorDialog = ({
 
           {items.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">
-              Список пуст. Добавьте темы, релевантные пользователю.
+              {t('interests.empty')}
             </p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
@@ -148,7 +149,7 @@ export const InterestsEditorDialog = ({
                     type="button"
                     onClick={() => handleRemove(idx)}
                     className="rounded-full p-0.5 hover:bg-background/60"
-                    aria-label={`Удалить «${value}»`}
+                    aria-label={t('interests.removeAria', { value })}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -167,7 +168,7 @@ export const InterestsEditorDialog = ({
                   handleAdd();
                 }
               }}
-              placeholder="Например, квантовая механика"
+              placeholder={t('interests.placeholder')}
               maxLength={MAX_INTEREST_LENGTH + 10}
               disabled={limitReached}
             />
@@ -180,21 +181,21 @@ export const InterestsEditorDialog = ({
               className="gap-1"
             >
               <Plus className="h-4 w-4" />
-              Добавить
+              {t('common.add')}
             </Button>
           </div>
 
           {draftConflict && (
-            <p className="text-xs text-amber-600">Этот интерес уже добавлен</p>
+            <p className="text-xs text-amber-600">{t('interests.duplicate')}</p>
           )}
           {draftTooLong && (
             <p className="text-xs text-destructive">
-              Максимум {MAX_INTEREST_LENGTH} символов
+              {t('interests.tooLong', { count: MAX_INTEREST_LENGTH })}
             </p>
           )}
           {limitReached && (
             <p className="text-xs text-amber-600">
-              Достигнут лимит в {MAX_INTERESTS} интересов
+              {t('interests.limitReached', { count: MAX_INTERESTS })}
             </p>
           )}
         </div>
@@ -205,11 +206,11 @@ export const InterestsEditorDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!isDirty || isSaving} className="gap-2">
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-            Сохранить
+            {t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

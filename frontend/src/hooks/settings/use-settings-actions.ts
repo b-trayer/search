@@ -7,6 +7,7 @@ import {
 import type { RankingWeights, WeightPreset } from '@/lib/types';
 import type { RoleTypeMatrix, TopicScores, SpecializationTopics } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { translate } from '@/lib/i18n';
 import { type SettingsData, deepClone } from './types';
 import {
   buildExport,
@@ -81,9 +82,9 @@ export function useSettingsActions(
         });
       }
 
-      toast({ title: 'Сохранено', description: 'Настройки успешно применены' });
+      toast({ title: translate('toast.saved.title'), description: translate('toast.saved.desc') });
     } catch {
-      toast({ title: 'Ошибка сохранения', variant: 'destructive' });
+      toast({ title: translate('toast.saveError'), variant: 'destructive' });
       setData(prev => ({ ...prev, isSaving: false }));
     }
   }, [data, setData, toast]);
@@ -106,9 +107,9 @@ export function useSettingsActions(
         isSaving: false,
         hasChanges: false,
       });
-      toast({ title: 'Сброшено', description: 'Все настройки сброшены' });
+      toast({ title: translate('toast.resetTitle'), description: translate('toast.resetDesc') });
     } catch {
-      toast({ title: 'Ошибка', variant: 'destructive' });
+      toast({ title: translate('toast.error'), variant: 'destructive' });
       setData(prev => ({ ...prev, isSaving: false }));
     }
   }, [setData, toast]);
@@ -140,7 +141,7 @@ export function useSettingsActions(
             return prev;
         }
       });
-      toast({ title: 'Раздел сброшен', description: 'Изменения отменены' });
+      toast({ title: translate('toast.sectionResetTitle'), description: translate('toast.sectionResetDesc') });
     },
     [setData, toast],
   );
@@ -157,9 +158,9 @@ export function useSettingsActions(
         isSaving: false,
         hasChanges: false,
       }));
-      toast({ title: 'Пресет применен', description: `Пресет "${preset}" активирован` });
+      toast({ title: translate('toast.presetApplied'), description: translate('toast.presetAppliedDesc', { name: String(preset) }) });
     } catch {
-      toast({ title: 'Ошибка', variant: 'destructive' });
+      toast({ title: translate('toast.error'), variant: 'destructive' });
       setData(prev => ({ ...prev, isSaving: false }));
     }
   }, [setData, toast]);
@@ -178,10 +179,10 @@ export function useSettingsActions(
             currentPreset: name,
           };
         });
-        toast({ title: 'Пресет сохранен', description: `«${name}»` });
+        toast({ title: translate('toast.presetSaved'), description: `«${name}»` });
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Не удалось сохранить пресет';
-        toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
+        const msg = e instanceof Error ? e.message : translate('toast.presetSaveError');
+        toast({ title: translate('toast.error'), description: msg, variant: 'destructive' });
       }
     },
     [data.weights, setData, toast],
@@ -200,9 +201,9 @@ export function useSettingsActions(
             currentPreset: prev.currentPreset === name ? null : prev.currentPreset,
           };
         });
-        toast({ title: 'Пресет удален', description: `«${name}»` });
+        toast({ title: translate('toast.presetDeleted'), description: `«${name}»` });
       } catch {
-        toast({ title: 'Ошибка', variant: 'destructive' });
+        toast({ title: translate('toast.error'), variant: 'destructive' });
       }
     },
     [setData, toast],
@@ -211,12 +212,12 @@ export function useSettingsActions(
   const handleExport = useCallback(() => {
     const payload = buildExport(data);
     if (!payload) {
-      toast({ title: 'Нет данных для экспорта', variant: 'destructive' });
+      toast({ title: translate('toast.exportEmpty'), variant: 'destructive' });
       return;
     }
     const ts = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
     downloadJson(`ranking-settings-${ts}.json`, payload);
-    toast({ title: 'Экспортировано', description: 'Файл с настройками сохранен' });
+    toast({ title: translate('toast.exportTitle'), description: translate('toast.exportDesc') });
   }, [data, toast]);
 
   const handleImport = useCallback(
@@ -224,7 +225,7 @@ export function useSettingsActions(
       const text = await file.text();
       const parsed = parseImport(text);
       if (!parsed.ok || !parsed.payload) {
-        toast({ title: 'Не удалось импортировать', description: parsed.error, variant: 'destructive' });
+        toast({ title: translate('toast.importError'), description: parsed.error, variant: 'destructive' });
         return;
       }
       setPendingImport(parsed.payload);
@@ -255,8 +256,8 @@ export function useSettingsActions(
       }));
       setPendingImport(null);
       toast({
-        title: 'Импортировано',
-        description: 'Не забудьте нажать «Сохранить» для применения настроек',
+        title: translate('toast.imported'),
+        description: translate('toast.importedDesc'),
       });
     },
     [pendingImport, setData, toast],
@@ -273,8 +274,8 @@ export function useSettingsActions(
         currentPreset: null,
       }));
       toast({
-        title: 'Восстановлено',
-        description: 'Не забудьте нажать «Сохранить»',
+        title: translate('toast.restored'),
+        description: translate('toast.restoredDesc'),
       });
     },
     [setData, toast],

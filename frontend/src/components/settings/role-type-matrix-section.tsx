@@ -1,8 +1,9 @@
 import { Wand2 } from 'lucide-react';
 import type { RoleTypeMatrix } from '@/lib/api';
-import { ROLE_LABELS, DOC_TYPE_LABELS } from './constants';
+import { ROLE_LABEL_KEYS, DOC_TYPE_LABEL_KEYS } from './constants';
 import { SectionResetButton } from './section-reset-button';
 import { normalizeRow } from '@/hooks/settings/changes';
+import { useTranslation } from '@/lib/i18n';
 
 interface RoleTypeMatrixSectionProps {
   matrix: RoleTypeMatrix;
@@ -25,8 +26,12 @@ export function RoleTypeMatrixSection({
   hasSectionChanges = false,
   isCellChanged,
 }: RoleTypeMatrixSectionProps) {
+  const { t } = useTranslation();
   const roles = Object.keys(matrix);
   const docTypes = Object.keys(matrix[roles[0]] || {});
+
+  const roleLabel = (role: string) => (ROLE_LABEL_KEYS[role] ? t(ROLE_LABEL_KEYS[role]) : role);
+  const docTypeLabel = (dt: string) => (DOC_TYPE_LABEL_KEYS[dt] ? t(DOC_TYPE_LABEL_KEYS[dt]) : dt);
 
   return (
     <section
@@ -35,19 +40,19 @@ export function RoleTypeMatrixSection({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-notion-text">
-          Матрица f_type (роль → тип документа)
+          {t('matrix.title')}
         </h2>
         {onResetSection && (
           <SectionResetButton
             disabled={isSaving}
             hasChanges={hasSectionChanges}
             onConfirm={onResetSection}
-            sectionName="Матрица f_type"
+            sectionName={t('settings.section.matrix')}
           />
         )}
       </div>
       <p className="mt-1 text-sm text-notion-text-secondary">
-        Вероятностное распределение P(type | role). Сумма по каждой строке должна быть равна 1.
+        {t('matrix.desc')}
       </p>
 
       <div className="-mx-6 mt-5 overflow-x-auto px-6">
@@ -55,14 +60,14 @@ export function RoleTypeMatrixSection({
           <thead>
             <tr className="border-b border-notion-border">
               <th className="whitespace-nowrap py-2 px-2 text-left text-xs font-medium uppercase tracking-wide text-notion-text-tertiary">
-                Роль \ Тип
+                {t('matrix.headerRole')}
               </th>
               {docTypes.map((dt) => (
                 <th
                   key={dt}
                   className="whitespace-nowrap py-2 px-1 text-center text-xs font-medium uppercase tracking-wide text-notion-text-tertiary sm:px-2"
                 >
-                  {DOC_TYPE_LABELS[dt] || dt}
+                  {docTypeLabel(dt)}
                 </th>
               ))}
               <th className="whitespace-nowrap py-2 px-2 text-center text-xs font-medium uppercase tracking-wide text-notion-text-tertiary">
@@ -86,7 +91,7 @@ export function RoleTypeMatrixSection({
               return (
                 <tr key={role} className="border-b border-notion-border last:border-0">
                   <td className="whitespace-nowrap py-2 px-2 text-sm font-medium text-notion-text">
-                    {ROLE_LABELS[role] || role}
+                    {roleLabel(role)}
                   </td>
                   {docTypes.map((dt) => {
                     const changed = isCellChanged ? isCellChanged(role, dt) : false;
@@ -118,7 +123,7 @@ export function RoleTypeMatrixSection({
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-amber-50 text-amber-700'
                       }`}
-                      title={ok ? 'Сумма = 1' : 'Рекомендуется сумма = 1'}
+                      title={ok ? t('matrix.sumOk') : t('matrix.sumWarn')}
                     >
                       {sum.toFixed(2)}
                     </span>
@@ -128,8 +133,8 @@ export function RoleTypeMatrixSection({
                       type="button"
                       onClick={handleNormalizeRow}
                       disabled={isSaving || sum === 0 || ok}
-                      title="Привести строку к сумме = 1"
-                      aria-label={`Нормализовать строку «${ROLE_LABELS[role] || role}»`}
+                      title={t('matrix.normalizeRow')}
+                      aria-label={t('matrix.normalizeRowAria', { role: roleLabel(role) })}
                       className="inline-flex h-6 w-6 items-center justify-center rounded-notion text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-notion-text disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       <Wand2 className="h-3 w-3" />
@@ -142,7 +147,7 @@ export function RoleTypeMatrixSection({
         </table>
       </div>
       <p className="mt-2 text-xs text-notion-text-tertiary sm:hidden">
-        Прокрутите таблицу вправо для просмотра всех типов
+        {t('matrix.scrollHint')}
       </p>
     </section>
   );

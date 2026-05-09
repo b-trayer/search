@@ -9,6 +9,7 @@ import {
 import { PositionChip, ScoreBreakdown } from '@/components/results';
 import { getPositionChange } from '@/hooks/use-compare';
 import type { DocumentResult, User } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface ResultColumnProps {
   user: User | null;
@@ -18,14 +19,15 @@ interface ResultColumnProps {
 }
 
 function PositionBadge({ value }: { value: number }) {
+  const { t, plural } = useTranslation();
   const positive = value > 0;
   const Icon = positive ? TrendingUp : TrendingDown;
   const colorClass = positive
     ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
     : 'text-red-700 bg-red-50 border-red-100';
   const tooltip = positive
-    ? `На ${value} ${plural(value, 'позицию', 'позиции', 'позиций')} выше, чем у другого пользователя`
-    : `На ${Math.abs(value)} ${plural(Math.abs(value), 'позицию', 'позиции', 'позиций')} ниже, чем у другого пользователя`;
+    ? t('compare.posUp', { n: value, noun: plural('compare.position', value) })
+    : t('compare.posDown', { n: Math.abs(value), noun: plural('compare.position', Math.abs(value)) });
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -47,36 +49,22 @@ function PositionBadge({ value }: { value: number }) {
 }
 
 function UniqueBadge() {
+  const { t } = useTranslation();
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="inline-flex cursor-help items-center gap-1 rounded-notion border border-amber-100 bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
             <Star className="h-3 w-3" />
-            уникальный
+            {t('compare.unique')}
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs">
-          Этого документа нет в топе у другого пользователя
+          {t('compare.uniqueTooltip')}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
-}
-
-function plural(n: number, one: string, few: string, many: string): string {
-  const abs = Math.abs(n) % 100;
-  const lastDigit = abs % 10;
-  if (abs > 10 && abs < 20) return many;
-  if (lastDigit === 1) return one;
-  if (lastDigit >= 2 && lastDigit <= 4) return few;
-  return many;
-}
-
-function buildTitle(user: User | null, fallback: string): string {
-  if (!user) return `Топ без персонализации (${fallback})`;
-  if (user.username) return `Топ для @${user.username}`;
-  return `Топ для ${user.specialization || user.role}`;
 }
 
 interface ResultRowProps {
@@ -88,6 +76,7 @@ interface ResultRowProps {
 
 function ResultRow({ doc, index, posChange, isUnique }: ResultRowProps) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div
@@ -105,9 +94,9 @@ function ResultRow({ doc, index, posChange, isUnique }: ResultRowProps) {
               onClick={() => setExpanded((v) => !v)}
               className="inline-flex h-7 items-center gap-1 rounded-notion px-1.5 -ml-1.5 text-xs tabular-nums text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-notion-text active:bg-notion-bg-active"
               aria-expanded={expanded}
-              aria-label={expanded ? 'Скрыть разбор скора' : 'Показать разбор скора'}
+              aria-label={expanded ? t('score.toggleHide') : t('score.toggleShow')}
             >
-              score: {doc.final_score?.toFixed(1)}
+              {t('common.score')}: {doc.final_score?.toFixed(1)}
               {expanded ? (
                 <ChevronUp className="h-3.5 w-3.5" />
               ) : (
@@ -131,12 +120,19 @@ function ResultRow({ doc, index, posChange, isUnique }: ResultRowProps) {
   );
 }
 
+function buildTitle(user: User | null, fallback: string, t: (key: string, params?: Record<string, unknown>) => string): string {
+  if (!user) return t('compare.topNoPers', { label: fallback });
+  if (user.username) return t('compare.topForUser', { username: user.username });
+  return t('compare.topForSpec', { spec: user.specialization || user.role });
+}
+
 export default function ResultColumn({
   user,
   results,
   otherResults,
   fallbackLabel,
 }: ResultColumnProps) {
+  const { t } = useTranslation();
   const otherIds = new Set(otherResults.map((d) => d.document_id));
 
   return (
@@ -145,7 +141,7 @@ export default function ResultColumn({
         <div className="border-b border-notion-border p-4">
           <div className="flex items-center gap-2 text-sm font-medium text-notion-text">
             <UserIcon className="h-4 w-4 text-notion-text-tertiary" />
-            {buildTitle(user, fallbackLabel)}
+            {buildTitle(user, fallbackLabel, t)}
           </div>
           {user ? (
             <div className="mt-2 space-y-0.5 text-sm text-notion-text-secondary">
@@ -158,7 +154,7 @@ export default function ResultColumn({
             </div>
           ) : (
             <p className="mt-2 text-sm text-notion-text-tertiary">
-              Поиск без учета профиля пользователя
+              {t('compare.searchNoProfile')}
             </p>
           )}
         </div>
@@ -166,7 +162,7 @@ export default function ResultColumn({
         <div className="space-y-2 p-3">
           {results.length === 0 ? (
             <p className="py-8 text-center text-sm text-notion-text-tertiary">
-              Нажмите «Сравнить» для поиска
+              {t('compare.pressCompare')}
             </p>
           ) : (
             results.map((doc, idx) => (

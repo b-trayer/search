@@ -1,4 +1,5 @@
 import type { SearchState, SearchAction } from './search/search-types';
+import { translate } from '@/lib/i18n';
 export type { SearchState, SearchAction } from './search/search-types';
 export { DEFAULT_STATS, initialSearchState } from './search/search-types';
 
@@ -52,7 +53,7 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
       return { ...state, lastSearchParams: action.payload };
 
     case 'SET_EMPTY_QUERY_ERROR':
-      return { ...state, error: 'Введите поисковый запрос', errorCode: 'EMPTY_QUERY', isRetryable: false };
+      return { ...state, error: translate('search.toast.empty.title'), errorCode: 'EMPTY_QUERY', isRetryable: false };
 
     case 'RESET':
       return { ...state, query: '', results: [], isLoading: false, hasSearched: false, totalResults: 0, page: 1, totalPages: 1, isPersonalized: false, userProfile: null, stats: { totalResults: 0, avgCTR: 0, impressions: 0 }, error: null, errorCode: null, isRetryable: false, lastSearchParams: null };

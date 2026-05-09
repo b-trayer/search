@@ -6,23 +6,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SearchBar from '@/components/search-bar';
 import { getSearchStats } from '@/lib/api';
 import type { User, SearchField } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
-const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
-  { value: 'all', label: 'Везде' },
-  { value: 'title', label: 'В названии' },
-  { value: 'authors', label: 'В авторах' },
-  { value: 'subjects', label: 'В темах' },
-  { value: 'collection', label: 'В коллекции' },
+const SEARCH_FIELD_KEYS: { value: SearchField; label: string }[] = [
+  { value: 'all', label: 'search.searchField.all' },
+  { value: 'title', label: 'search.searchField.title' },
+  { value: 'authors', label: 'search.searchField.authors' },
+  { value: 'subjects', label: 'search.searchField.subjects' },
+  { value: 'collection', label: 'search.searchField.collection' },
 ];
-
-function pluralizeDocuments(count: number): string {
-  const abs = Math.abs(count) % 100;
-  const lastDigit = abs % 10;
-  if (abs > 10 && abs < 20) return 'документов';
-  if (lastDigit === 1) return 'документ';
-  if (lastDigit >= 2 && lastDigit <= 4) return 'документа';
-  return 'документов';
-}
 
 interface SearchHeroProps {
   query: string;
@@ -48,6 +40,7 @@ export default function SearchHero({
   onSearchFieldChange,
 }: SearchHeroProps) {
   const [totalDocuments, setTotalDocuments] = useState<number | null>(null);
+  const { t, plural, formatNumber, language } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +56,17 @@ export default function SearchHero({
     };
   }, []);
 
+  const subtitle = selectedUser
+    ? t('search.heroForUser', { target: selectedUser.specialization || selectedUser.role })
+    : t('search.heroNoUser');
+
+  const docCountLabel = (count: number) =>
+    language === 'ru'
+      ? plural('search.documents', count)
+      : count === 1
+        ? t('search.documents.one')
+        : t('search.documents.many');
+
   return (
     <section className="bg-notion-bg-secondary py-10 sm:py-14">
       <div className="container mx-auto px-4">
@@ -70,18 +74,16 @@ export default function SearchHero({
           {totalDocuments !== null && (
             <span className="inline-flex items-center gap-1.5 rounded-notion border border-notion-border bg-notion-bg px-2.5 py-1 text-xs font-medium text-notion-text-secondary">
               <BookOpen className="h-3.5 w-3.5 text-notion-text-tertiary" />
-              {totalDocuments.toLocaleString('ru-RU')} {pluralizeDocuments(totalDocuments)} в каталоге
+              {formatNumber(totalDocuments)} {docCountLabel(totalDocuments)} {t('search.docCountSuffix')}
             </span>
           )}
 
           <h2 className="mt-4 text-2xl font-semibold tracking-tight text-notion-text sm:mt-5 sm:text-3xl">
-            Над чем работаем?
+            {t('search.heroTitle')}
           </h2>
 
           <p className="mt-2 max-w-xl text-sm text-notion-text-secondary sm:text-base">
-            {selectedUser
-              ? `Результаты адаптированы для: ${selectedUser.specialization || selectedUser.role}`
-              : 'Выберите пользователя, чтобы включить персонализацию'}
+            {subtitle}
           </p>
 
           <div className="mt-6 flex w-full flex-col items-center gap-4 sm:mt-8">
@@ -97,7 +99,7 @@ export default function SearchHero({
               onValueChange={(value) => onSearchFieldChange(value as SearchField)}
               className="flex flex-wrap justify-center gap-1.5"
             >
-              {SEARCH_FIELD_OPTIONS.map((option) => (
+              {SEARCH_FIELD_KEYS.map((option) => (
                 <div key={option.value}>
                   <RadioGroupItem
                     value={option.value}
@@ -108,7 +110,7 @@ export default function SearchHero({
                     htmlFor={`search-field-${option.value}`}
                     className="inline-flex h-8 cursor-pointer select-none items-center rounded-notion border border-notion-border bg-notion-bg px-3 text-xs font-medium text-notion-text-secondary transition-colors hover:bg-notion-bg-hover hover:text-notion-text peer-data-[state=checked]:border-notion-text peer-data-[state=checked]:bg-notion-text peer-data-[state=checked]:text-white"
                   >
-                    {option.label}
+                    {t(option.label)}
                   </Label>
                 </div>
               ))}
@@ -130,7 +132,7 @@ export default function SearchHero({
                 htmlFor="personalization"
                 className="cursor-pointer text-xs font-medium text-notion-text-secondary"
               >
-                Персонализация
+                {t('search.personalization')}
               </Label>
               <Switch
                 id="personalization"

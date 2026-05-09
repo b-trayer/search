@@ -4,6 +4,7 @@ import SearchResults from '@/components/search-results';
 import SearchResultsSkeleton from '@/components/search-results-skeleton';
 import Pagination from '@/components/Pagination';
 import { SortMenu } from '@/components/search/sort-menu';
+import { useTranslation } from '@/lib/i18n';
 import type { DocumentResult, UserProfile, SortBy } from '@/lib/types';
 
 interface SearchContentProps {
@@ -88,17 +89,17 @@ export default function SearchContent({
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-1 items-center justify-center py-20">
       <div className="flex flex-col items-center gap-4 text-center max-w-md">
         <BookOpen className="h-20 w-20 text-notion-text-tertiary" />
         <div>
           <h3 className="text-2xl font-semibold tracking-tight text-notion-text mb-2">
-            Готово к работе
+            {t('search.empty.title')}
           </h3>
           <p className="text-sm text-notion-text-secondary">
-            Введите запрос и система подберет подходящую литературу. Выбор
-            пользователя наверху адаптирует выдачу под его профиль.
+            {t('search.empty.desc')}
           </p>
         </div>
       </div>
@@ -113,18 +114,19 @@ function NoResults({
   hasActiveFilters: boolean;
   onResetFilters?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-1 items-center justify-center py-20">
       <div className="flex flex-col items-center gap-4 text-center max-w-md">
         <SearchX className="h-16 w-16 text-notion-text-tertiary" />
         <div>
           <h3 className="text-xl font-medium text-notion-text mb-2">
-            Ничего не найдено
+            {t('search.noResults.title')}
           </h3>
           <p className="text-notion-text-secondary">
             {hasActiveFilters
-              ? 'Возможно, фильтры слишком строгие. Попробуйте сбросить их или изменить поисковый запрос.'
-              : 'Попробуйте изменить поисковый запрос.'}
+              ? t('search.noResults.hintFilters')
+              : t('search.noResults.hint')}
           </p>
         </div>
         {hasActiveFilters && onResetFilters && (
@@ -133,7 +135,7 @@ function NoResults({
             onClick={onResetFilters}
             className="inline-flex h-8 items-center gap-1.5 rounded-notion border border-notion-border bg-notion-bg px-3 text-sm text-notion-text transition-colors hover:bg-notion-bg-hover"
           >
-            Сбросить фильтры
+            {t('search.noResults.resetFilters')}
           </button>
         )}
       </div>
@@ -156,21 +158,28 @@ function ResultsHeader({
   sortBy: SortBy;
   onSortChange: (next: SortBy) => void;
 }) {
+  const { t, formatNumber, language, plural } = useTranslation();
+  const docNoun =
+    language === 'ru'
+      ? plural('search.documents', totalResults)
+      : totalResults === 1
+        ? t('search.documents.one')
+        : t('search.documents.many');
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-sm text-notion-text-secondary">
-        Найдено:{' '}
+        {t('search.foundLabel')}{' '}
         <span className="font-medium text-notion-text tabular-nums">
-          {totalResults.toLocaleString('ru-RU')}
+          {formatNumber(totalResults)}
         </span>{' '}
-        документов
+        {docNoun}
         {totalPages > 1 && (
           <span className="ml-2">
-            (страница {page.toLocaleString('ru-RU')} из {totalPages.toLocaleString('ru-RU')})
+            ({t('search.pageOf', { page: formatNumber(page), total: formatNumber(totalPages) })})
           </span>
         )}
         {isPersonalized && (
-          <span className="ml-2 text-notion-accent">✨ с персонализацией</span>
+          <span className="ml-2 text-notion-accent">{t('search.personalized')}</span>
         )}
       </p>
       <SortMenu value={sortBy} onChange={onSortChange} />

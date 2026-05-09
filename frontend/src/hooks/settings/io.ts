@@ -1,6 +1,7 @@
 import type { SettingsData } from './types';
 import type { RankingWeights } from '@/lib/types';
 import type { RoleTypeMatrix, TopicScores, SpecializationTopics } from '@/lib/api';
+import { translate } from '@/lib/i18n';
 
 export interface SettingsExport {
   version: 1;
@@ -50,18 +51,18 @@ export function parseImport(raw: string): ParseResult {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return { ok: false, error: 'Файл не является валидным JSON' };
+    return { ok: false, error: translate('import.errorJson') };
   }
 
   if (typeof parsed !== 'object' || parsed === null) {
-    return { ok: false, error: 'Корневой элемент должен быть объектом' };
+    return { ok: false, error: translate('import.errorRoot') };
   }
 
   const obj = parsed as Record<string, unknown>;
   const required = ['weights', 'role_type_matrix', 'topic_scores', 'specialization_topics'];
   for (const key of required) {
     if (!(key in obj)) {
-      return { ok: false, error: `Отсутствует поле «${key}»` };
+      return { ok: false, error: translate('import.errorMissing', { name: key }) };
     }
   }
 

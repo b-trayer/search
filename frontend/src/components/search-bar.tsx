@@ -1,4 +1,5 @@
 import { Loader2, Search } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface SearchBarProps {
   query: string;
@@ -8,6 +9,8 @@ interface SearchBarProps {
 }
 
 const SearchBar = ({ query, onQueryChange, onSearch, isLoading }: SearchBarProps) => {
+  const { t } = useTranslation();
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       onSearch();
@@ -20,7 +23,7 @@ const SearchBar = ({ query, onQueryChange, onSearch, isLoading }: SearchBarProps
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-notion-text-tertiary" />
         <input
           type="text"
-          placeholder="Поиск книг, авторов..."
+          placeholder={t('search.placeholder')}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -38,7 +41,7 @@ const SearchBar = ({ query, onQueryChange, onSearch, isLoading }: SearchBarProps
         ) : (
           <Search className="h-4 w-4" />
         )}
-        <span className="hidden sm:inline">Найти</span>
+        <span className="hidden sm:inline">{t('common.searchButton')}</span>
       </button>
     </div>
   );

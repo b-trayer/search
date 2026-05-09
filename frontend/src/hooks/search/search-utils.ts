@@ -1,6 +1,7 @@
 import { registerImpressions, ApiError } from '@/lib/api';
 import type { DocumentResult } from '@/lib/types';
 import type { SearchAction } from '../search-reducer';
+import { translate } from '@/lib/i18n';
 
 export function calculateAvgCtr(results: DocumentResult[]): number {
   if (results.length === 0) return 0;
@@ -48,7 +49,7 @@ export function handleSearchError(err: unknown, dispatch: React.Dispatch<SearchA
     dispatch({
       type: 'SEARCH_ERROR',
       payload: {
-        error: 'Произошла неизвестная ошибка',
+        error: translate('toast.unknownError'),
         errorCode: 'UNKNOWN_ERROR',
         isRetryable: false,
       },

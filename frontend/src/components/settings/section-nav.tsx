@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/lib/i18n';
 
 export interface SectionNavItem {
   id: string;
@@ -12,6 +13,7 @@ interface SectionNavProps {
 
 export function SectionNav({ items, offsetTop = 80 }: SectionNavProps) {
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
@@ -49,7 +51,7 @@ export function SectionNav({ items, offsetTop = 80 }: SectionNavProps) {
 
   return (
     <nav
-      aria-label="Разделы настроек"
+      aria-label={t('settings.sectionsAria')}
       className="hidden lg:block sticky top-20 self-start"
     >
       <ul className="space-y-0.5 border-l border-notion-border pl-3">

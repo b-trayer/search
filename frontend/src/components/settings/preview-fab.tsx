@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, Beaker } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface PreviewFabProps {
   targetId?: string;
@@ -7,6 +8,7 @@ interface PreviewFabProps {
 
 export function PreviewFab({ targetId = 'section-preview' }: PreviewFabProps) {
   const [visible, setVisible] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
@@ -35,10 +37,10 @@ export function PreviewFab({ targetId = 'section-preview' }: PreviewFabProps) {
         right: 'max(1.5rem, env(safe-area-inset-right))',
       }}
       className="fixed z-40 inline-flex h-11 items-center gap-2 rounded-notion border border-notion-border bg-notion-bg px-4 text-sm font-medium text-notion-text shadow-notion-md transition-all hover:bg-notion-bg-hover"
-      title="Перейти к тест-превью"
+      title={t('preview.fabTitle')}
     >
       <Beaker className="h-4 w-4 text-notion-text-tertiary" />
-      Тест-превью
+      {t('preview.fab')}
       <ArrowDown className="h-3.5 w-3.5 text-notion-text-tertiary" />
     </button>
   );

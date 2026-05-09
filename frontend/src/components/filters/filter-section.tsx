@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import type { FilterItem } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface FilterSectionProps {
   title: string;
@@ -37,6 +38,7 @@ export default function FilterSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const { t, formatNumber } = useTranslation();
 
   const showSearch = items.length > searchThreshold;
 
@@ -98,15 +100,15 @@ export default function FilterSection({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Найти в «${title}»…`}
-              aria-label={`Поиск по списку «${title}»`}
+              placeholder={t('filters.searchInListPlaceholder', { title })}
+              aria-label={t('filters.searchInListAria', { title })}
               className="h-8 w-full rounded-notion border border-notion-border bg-notion-bg pl-7 pr-7 text-xs text-notion-text placeholder:text-notion-text-tertiary focus:border-notion-border-strong focus:outline-none"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                aria-label="Очистить поиск"
+                aria-label={t('filters.clearSearch')}
                 className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-notion text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
               >
                 <X className="h-3 w-3" />
@@ -117,7 +119,7 @@ export default function FilterSection({
         <div className="space-y-0.5 pb-2">
           {visibleItems.length === 0 && (
             <div className="px-2 py-3 text-center text-xs text-notion-text-tertiary">
-              Ничего не найдено
+              {t('filters.notFound')}
             </div>
           )}
           {visibleItems.map((item) => {
@@ -143,7 +145,7 @@ export default function FilterSection({
                   {labelMapper ? labelMapper(item.name) : item.name}
                 </span>
                 <span className="shrink-0 text-xs tabular-nums text-notion-text-tertiary">
-                  {item.count.toLocaleString('ru-RU')}
+                  {formatNumber(item.count)}
                 </span>
               </label>
             );
@@ -154,7 +156,7 @@ export default function FilterSection({
               onClick={() => setShowAll(true)}
               className="mt-1 inline-flex h-7 items-center rounded-notion px-2 text-xs text-notion-text-secondary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
             >
-              Показать еще {hiddenCount.toLocaleString('ru-RU')}
+              {t('filters.showMore', { count: formatNumber(hiddenCount) })}
             </button>
           )}
           {showAll && filteredItems.length > collapseThreshold && !search.trim() && (
@@ -163,7 +165,7 @@ export default function FilterSection({
               onClick={() => setShowAll(false)}
               className="mt-1 inline-flex h-7 items-center rounded-notion px-2 text-xs text-notion-text-secondary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
             >
-              Свернуть
+              {t('filters.collapse')}
             </button>
           )}
         </div>

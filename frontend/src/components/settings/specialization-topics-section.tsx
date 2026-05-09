@@ -3,6 +3,7 @@ import { Trash2, Plus, X } from 'lucide-react';
 import { HEADER_CHIP, HEADER_CHIP_PRIMARY } from '@/components/layout/header-chip';
 import type { SpecializationTopics } from '@/lib/api';
 import { SectionResetButton } from './section-reset-button';
+import { useTranslation } from '@/lib/i18n';
 
 interface SpecializationTopicsSectionProps {
   topics: SpecializationTopics;
@@ -30,6 +31,7 @@ function KeywordsChipsInput({
   onKeywordsChange: (specialization: string, keywords: string[]) => void;
 }) {
   const [draft, setDraft] = useState('');
+  const { t } = useTranslation();
 
   const dedupAdd = (raw: string) => {
     const tokens = raw
@@ -39,10 +41,10 @@ function KeywordsChipsInput({
     if (tokens.length === 0) return;
     const lower = new Set(keywords.map((k) => k.toLowerCase()));
     const next = [...keywords];
-    for (const t of tokens) {
-      if (!lower.has(t.toLowerCase())) {
-        next.push(t);
-        lower.add(t.toLowerCase());
+    for (const tok of tokens) {
+      if (!lower.has(tok.toLowerCase())) {
+        next.push(tok);
+        lower.add(tok.toLowerCase());
       }
     }
     if (next.length !== keywords.length) {
@@ -85,7 +87,7 @@ function KeywordsChipsInput({
             type="button"
             onClick={() => removeAt(idx)}
             disabled={isSaving}
-            aria-label={`Удалить «${kw}»`}
+            aria-label={t('specs.removeAria', { name: kw })}
             className="text-notion-text-tertiary transition-colors hover:text-red-600 disabled:opacity-50"
           >
             <X className="h-3 w-3" />
@@ -99,7 +101,7 @@ function KeywordsChipsInput({
         onKeyDown={handleKey}
         onBlur={handleBlur}
         disabled={isSaving}
-        placeholder={keywords.length === 0 ? 'Добавьте ключевые слова (Enter или запятая)' : '+'}
+        placeholder={keywords.length === 0 ? t('specs.keywordsPlaceholder') : '+'}
         className="min-w-[8rem] flex-1 bg-transparent px-1.5 py-0.5 text-sm text-notion-text outline-none placeholder:text-notion-text-tertiary"
       />
     </div>
@@ -118,6 +120,7 @@ export function SpecializationTopicsSection({
 }: SpecializationTopicsSectionProps) {
   const [newSpecName, setNewSpecName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const { t, plural, language } = useTranslation();
 
   const handleAddClick = () => {
     if (newSpecName.trim()) {
@@ -137,6 +140,8 @@ export function SpecializationTopicsSection({
     }
   };
 
+  const sortLocale = language === 'ru' ? 'ru' : 'en';
+
   return (
     <section
       id="section-specializations"
@@ -144,7 +149,7 @@ export function SpecializationTopicsSection({
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold tracking-tight text-notion-text">
-          Ключевые слова специализаций
+          {t('specs.title')}
         </h2>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {onResetSection && (
@@ -152,7 +157,7 @@ export function SpecializationTopicsSection({
               disabled={isSaving}
               hasChanges={hasSectionChanges}
               onConfirm={onResetSection}
-              sectionName="Специализации"
+              sectionName={t('settings.section.specializations')}
             />
           )}
           {!isAdding && (
@@ -163,26 +168,26 @@ export function SpecializationTopicsSection({
               className={HEADER_CHIP}
             >
               <Plus className="h-4 w-4" />
-              Добавить
+              {t('specs.add')}
             </button>
           )}
         </div>
       </div>
       <p className="mt-1 text-sm text-notion-text-secondary">
-        Используются для расчета f_topic при совпадении со специализацией пользователя
+        {t('specs.desc')}
       </p>
 
       {isAdding && (
         <div className="mt-5 rounded-notion border border-notion-border bg-notion-bg-secondary p-4">
           <label className="mb-2 block text-sm font-medium text-notion-text">
-            Название новой специализации
+            {t('specs.newName')}
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               value={newSpecName}
               onChange={(e) => setNewSpecName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Например: Психология"
+              placeholder={t('specs.placeholder')}
               autoFocus
               className={INPUT_CLASS}
             />
@@ -193,7 +198,7 @@ export function SpecializationTopicsSection({
                 disabled={!newSpecName.trim()}
                 className={HEADER_CHIP_PRIMARY}
               >
-                Добавить
+                {t('specs.add')}
               </button>
               <button
                 type="button"
@@ -203,7 +208,7 @@ export function SpecializationTopicsSection({
                 }}
                 className={HEADER_CHIP}
               >
-                Отмена
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -212,7 +217,7 @@ export function SpecializationTopicsSection({
 
       <div className="mt-5 space-y-3">
         {Object.entries(topics)
-          .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+          .sort(([a], [b]) => a.localeCompare(b, sortLocale))
           .map(([specialization, keywords]) => {
             const changed = isSpecChanged ? isSpecChanged(specialization) : false;
             return (
@@ -232,7 +237,7 @@ export function SpecializationTopicsSection({
                   type="button"
                   onClick={() => onRemoveSpecialization(specialization)}
                   disabled={isSaving}
-                  aria-label={`Удалить «${specialization}»`}
+                  aria-label={t('specs.removeAria', { name: specialization })}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-notion text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-red-600 disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -245,7 +250,7 @@ export function SpecializationTopicsSection({
                 onKeywordsChange={onTopicsChange}
               />
               <p className="mt-1 text-xs text-notion-text-tertiary">
-                {keywords.length} {getKeywordsWord(keywords.length)}
+                {keywords.length} {plural('specs.keywords', keywords.length)}
               </p>
             </div>
             );
@@ -254,25 +259,9 @@ export function SpecializationTopicsSection({
 
       {Object.keys(topics).length === 0 && (
         <div className="py-8 text-center text-sm text-notion-text-secondary">
-          Нет специализаций. Нажмите «Добавить» чтобы создать первую.
+          {t('specs.empty')}
         </div>
       )}
     </section>
   );
-}
-
-function getKeywordsWord(count: number): string {
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-    return 'ключевых слов';
-  }
-  if (lastDigit === 1) {
-    return 'ключевое слово';
-  }
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return 'ключевых слова';
-  }
-  return 'ключевых слов';
 }

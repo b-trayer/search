@@ -1,42 +1,47 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { DemoScenarioButtons } from './demo-scenario-buttons';
 import type { DemoScenario } from './constants';
+import { setLanguage } from '@/lib/i18n';
 
 const SCENARIOS: DemoScenario[] = [
   {
     id: 'topic-1',
     category: 'topic',
-    title: 'Математик vs Химик',
-    description: 'desc 1',
+    titleKey: 'scenario.s1.title',
+    descriptionKey: 'scenario.s1.desc',
+    expectedDeltaKey: 'scenario.s1.delta',
     query: 'анализ',
     leftUsername: 'Мария',
     rightUsername: 'Кирилл',
-    expectedDelta: 'effect 1',
   },
   {
     id: 'topic-2',
     category: 'topic',
-    title: 'Физик vs Геолог',
-    description: 'desc 2',
+    titleKey: 'scenario.s2.title',
+    descriptionKey: 'scenario.s2.desc',
+    expectedDeltaKey: 'scenario.s2.delta',
     query: 'ядро',
     leftUsername: 'Дмитрий',
     rightUsername: 'Артем',
-    expectedDelta: 'effect 2',
   },
   {
     id: 'role-1',
     category: 'role',
-    title: 'Бакалавр vs Аспирант',
-    description: 'desc 3',
+    titleKey: 'scenario.s6.title',
+    descriptionKey: 'scenario.s6.desc',
+    expectedDeltaKey: 'scenario.s6.delta',
     query: 'оптика лазер',
     leftUsername: 'Иван',
     rightUsername: 'Дмитрий',
-    expectedDelta: 'effect 3',
   },
 ];
 
 describe('DemoScenarioButtons', () => {
+  beforeEach(() => {
+    setLanguage('ru');
+  });
+
   it('renders only categories that have scenarios', () => {
     render(<DemoScenarioButtons scenarios={SCENARIOS} onSelect={vi.fn()} />);
 
@@ -48,12 +53,12 @@ describe('DemoScenarioButtons', () => {
   it('renders all scenario titles, queries and descriptions', () => {
     render(<DemoScenarioButtons scenarios={SCENARIOS} onSelect={vi.fn()} />);
 
-    for (const scenario of SCENARIOS) {
-      expect(screen.getByText(scenario.title)).toBeInTheDocument();
-      expect(screen.getByText(scenario.query)).toBeInTheDocument();
-      expect(screen.getByText(scenario.description)).toBeInTheDocument();
-      expect(screen.getByText(scenario.expectedDelta)).toBeInTheDocument();
-    }
+    expect(screen.getByText('Математик vs Химик')).toBeInTheDocument();
+    expect(screen.getByText('Физик vs Геолог')).toBeInTheDocument();
+    expect(screen.getByText('Бакалавр-физик vs Аспирант-физик')).toBeInTheDocument();
+    expect(screen.getByText('анализ')).toBeInTheDocument();
+    expect(screen.getByText('ядро')).toBeInTheDocument();
+    expect(screen.getByText('оптика лазер')).toBeInTheDocument();
   });
 
   it('calls onSelect with the correct scenario when a card is clicked', () => {
@@ -71,10 +76,9 @@ describe('DemoScenarioButtons', () => {
   it('disables all scenario cards when disabled', () => {
     render(<DemoScenarioButtons scenarios={SCENARIOS} onSelect={vi.fn()} disabled />);
 
-    for (const scenario of SCENARIOS) {
-      const card = screen.getByRole('button', { name: new RegExp(scenario.title) });
-      expect(card).toBeDisabled();
-    }
+    expect(screen.getByRole('button', { name: /Математик vs Химик/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Физик vs Геолог/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Бакалавр-физик vs Аспирант-физик/ })).toBeDisabled();
   });
 
   it('shows category description as plain text under heading', () => {

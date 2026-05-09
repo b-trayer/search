@@ -1,5 +1,6 @@
 import { Eye, MousePointer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from '@/lib/i18n';
 
 interface BookStatsProps {
   impressions: number;
@@ -9,6 +10,7 @@ interface BookStatsProps {
 }
 
 const BookStats = ({ impressions, clicks, displayCtr, collection }: BookStatsProps) => {
+  const { t } = useTranslation();
   const ctrPercent = displayCtr !== undefined
     ? displayCtr * 100
     : (impressions > 0 ? (clicks / impressions) * 100 : 0);
@@ -21,11 +23,11 @@ const BookStats = ({ impressions, clicks, displayCtr, collection }: BookStatsPro
         </Badge>
       )}
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1" title="Показы">
+        <span className="flex items-center gap-1" title={t('card.impressions')}>
           <Eye className="h-3.5 w-3.5" />
           {impressions}
         </span>
-        <span className="flex items-center gap-1" title="Клики">
+        <span className="flex items-center gap-1" title={t('card.clicks')}>
           <MousePointer className="h-3.5 w-3.5" />
           {clicks}
         </span>

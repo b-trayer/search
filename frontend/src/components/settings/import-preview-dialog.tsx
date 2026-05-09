@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import type { SettingsExport } from '@/hooks/settings/io';
 import type { ImportApplyOptions } from '@/hooks/settings/use-settings-actions';
+import { useTranslation } from '@/lib/i18n';
 
 interface ImportPreviewDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function ImportPreviewDialog({
   onCancel,
   onApply,
 }: ImportPreviewDialogProps) {
+  const { t, language } = useTranslation();
   const [opts, setOpts] = useState<ImportApplyOptions>({
     weights: true,
     matrix: true,
@@ -50,6 +52,7 @@ export function ImportPreviewDialog({
     : null;
 
   const anySelected = Object.values(opts).some(Boolean);
+  const dateLocale = language === 'ru' ? 'ru-RU' : 'en-US';
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -58,42 +61,41 @@ export function ImportPreviewDialog({
           <DialogTitle>
             <span className="inline-flex items-center gap-2">
               <FileJson className="h-4 w-4 text-notion-text-tertiary" />
-              Импорт настроек
+              {t('import.title')}
             </span>
           </DialogTitle>
           <DialogDescription>
-            Что именно применить из загруженного файла? После применения нажмите
-            «Сохранить» в шапке.
+            {t('import.desc')}
           </DialogDescription>
         </DialogHeader>
 
         {totals && (
           <ul className="space-y-2 text-sm">
             <CheckRow
-              label="Веса формулы"
+              label={t('import.weights')}
               count={totals.weights}
-              countLabel="параметров"
+              countLabel={t('import.weightsCount')}
               checked={opts.weights}
               onChange={(v) => setOpts((s) => ({ ...s, weights: v }))}
             />
             <CheckRow
-              label="Матрица f_type"
+              label={t('import.matrix')}
               count={totals.matrix}
-              countLabel="ячеек"
+              countLabel={t('import.matrixCount')}
               checked={opts.matrix}
               onChange={(v) => setOpts((s) => ({ ...s, matrix: v }))}
             />
             <CheckRow
-              label="Скоры f_topic"
+              label={t('import.topics')}
               count={totals.topics}
-              countLabel="скоров"
+              countLabel={t('import.topicsCount')}
               checked={opts.topics}
               onChange={(v) => setOpts((s) => ({ ...s, topics: v }))}
             />
             <CheckRow
-              label="Специализации"
+              label={t('import.specs')}
               count={totals.specializations}
-              countLabel="специализаций"
+              countLabel={t('import.specsCount')}
               checked={opts.specializations}
               onChange={(v) => setOpts((s) => ({ ...s, specializations: v }))}
             />
@@ -102,7 +104,7 @@ export function ImportPreviewDialog({
 
         {payload?.exported_at && (
           <p className="text-xs text-notion-text-tertiary">
-            Экспортировано: {new Date(payload.exported_at).toLocaleString('ru-RU')}
+            {t('import.exportedAt', { date: new Date(payload.exported_at).toLocaleString(dateLocale) })}
           </p>
         )}
 
@@ -112,7 +114,7 @@ export function ImportPreviewDialog({
             onClick={onCancel}
             className="inline-flex h-9 items-center rounded-notion border border-notion-border bg-notion-bg px-3 text-sm text-notion-text transition-colors hover:bg-notion-bg-hover"
           >
-            Отмена
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -120,7 +122,7 @@ export function ImportPreviewDialog({
             disabled={!anySelected}
             className="inline-flex h-9 items-center rounded-notion bg-notion-accent px-3 text-sm font-medium text-white transition-colors hover:bg-notion-accent-hover disabled:opacity-50"
           >
-            Применить
+            {t('common.apply')}
           </button>
         </DialogFooter>
       </DialogContent>

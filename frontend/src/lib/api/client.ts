@@ -1,3 +1,5 @@
+import { translate } from '@/lib/i18n';
+
 export type ApiErrorCode =
   | 'EMPTY_QUERY'
   | 'OPENSEARCH_UNAVAILABLE'
@@ -31,22 +33,22 @@ export class ApiError extends Error {
   getUserMessage(): string {
     switch (this.code) {
       case 'EMPTY_QUERY':
-        return 'Введите поисковый запрос';
+        return translate('apierror.empty');
       case 'OPENSEARCH_UNAVAILABLE':
-        return 'Сервис поиска временно недоступен';
+        return translate('apierror.unavailable');
       case 'INDEX_NOT_FOUND':
-        return 'Поисковый индекс не найден';
+        return translate('apierror.indexNotFound');
       case 'USER_NOT_FOUND':
-        return 'Пользователь не найден';
+        return translate('apierror.userNotFound');
       case 'DATABASE_ERROR':
-        return 'Ошибка базы данных';
+        return translate('apierror.databaseError');
       case 'VALIDATION_ERROR':
-        return 'Неверные данные запроса';
+        return translate('apierror.validationError');
       case 'NETWORK_ERROR':
-        return 'Ошибка сети. Проверьте подключение';
+        return translate('apierror.networkError');
       case 'INTERNAL_ERROR':
       default:
-        return 'Произошла ошибка. Попробуйте позже';
+        return translate('apierror.internalError');
     }
   }
 }

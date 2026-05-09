@@ -1,3 +1,5 @@
+import { useTranslation } from '@/lib/i18n';
+
 interface ScorePersonalizationProps {
   fType: number;
   fTopic: number;
@@ -7,13 +9,14 @@ interface ScorePersonalizationProps {
 }
 
 export const ScorePersonalization = ({ fType, fTopic, fUser, userContrib, weights }: ScorePersonalizationProps) => {
+  const { t } = useTranslation();
   const alphaFType = weights.alpha_type * fType;
   const alphaFTopic = weights.alpha_topic * fTopic;
 
   return (
     <div className="pl-2 border-l-2 border-primary/30 space-y-1">
       <div className="text-muted-foreground text-[10px] uppercase tracking-wide mb-1">
-        Персонализация f(U,D)
+        {t('score.personalizationHeader')}
       </div>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-muted-foreground">
         <span>f_type (raw)</span>

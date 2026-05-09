@@ -23,18 +23,19 @@ import {
   isTopicScoreChanged,
   isWeightChanged,
 } from '@/hooks/settings/changes';
-
-const NAV_ITEMS: SectionNavItem[] = [
-  { id: 'section-formula', label: 'Формула' },
-  { id: 'section-weights', label: 'Веса' },
-  { id: 'section-matrix', label: 'Матрица f_type' },
-  { id: 'section-topics', label: 'Скоры f_topic' },
-  { id: 'section-specializations', label: 'Специализации' },
-  { id: 'section-preview', label: 'Тест-превью' },
-  { id: 'section-history', label: 'История' },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export default function Settings() {
+  const { t } = useTranslation();
+  const NAV_ITEMS: SectionNavItem[] = [
+    { id: 'section-formula', label: t('settings.section.formula') },
+    { id: 'section-weights', label: t('settings.section.weights') },
+    { id: 'section-matrix', label: t('settings.section.matrix') },
+    { id: 'section-topics', label: t('settings.section.topics') },
+    { id: 'section-specializations', label: t('settings.section.specializations') },
+    { id: 'section-preview', label: t('settings.section.preview') },
+    { id: 'section-history', label: t('settings.section.history') },
+  ];
   const data = useSettingsData();
   const {
     weights,
@@ -95,7 +96,7 @@ export default function Settings() {
   if (isLoading || !weights || !roleTypeMatrix || !topicScores || !specializationTopics) {
     return (
       <div className="min-h-screen bg-notion-bg-secondary flex items-center justify-center">
-        <div className="text-notion-text-secondary">Загрузка...</div>
+        <div className="text-notion-text-secondary">{t('common.loading')}</div>
       </div>
     );
   }

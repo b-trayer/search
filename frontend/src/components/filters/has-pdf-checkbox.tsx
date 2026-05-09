@@ -1,5 +1,6 @@
 import { FileDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslation } from '@/lib/i18n';
 
 interface HasPdfCheckboxProps {
   checked: boolean | null;
@@ -9,6 +10,7 @@ interface HasPdfCheckboxProps {
 
 export function HasPdfCheckbox({ checked, onChange, count }: HasPdfCheckboxProps) {
   const isOn = checked === true;
+  const { t, formatNumber } = useTranslation();
   return (
     <label
       className={`flex cursor-pointer items-center gap-2 rounded-notion px-2 py-2 transition-colors ${
@@ -26,10 +28,10 @@ export function HasPdfCheckbox({ checked, onChange, count }: HasPdfCheckboxProps
           isOn ? 'font-medium text-notion-text' : 'text-notion-text-secondary'
         }`}
       >
-        Доступно онлайн
+        {t('filters.online')}
       </span>
       <span className="shrink-0 text-xs tabular-nums text-notion-text-tertiary">
-        {count.toLocaleString('ru-RU')}
+        {formatNumber(count)}
       </span>
     </label>
   );

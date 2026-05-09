@@ -14,9 +14,11 @@ import {
 import type { DemoScenario } from '@/components/compare';
 import { getUsers } from '@/lib/api';
 import type { User } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 export default function Compare() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const {
     query, setQuery, isLoading, left, right,
     setLeftUserId, setLeftUser, setRightUserId, setRightUser,
@@ -44,11 +46,11 @@ export default function Compare() {
 
   const handleCompare = async () => {
     if (!query.trim()) {
-      toast({ title: 'Введите поисковый запрос', variant: 'destructive' });
+      toast({ title: t('search.toast.empty.title'), variant: 'destructive' });
       return;
     }
     await compare();
-    toast({ title: 'Сравнение готово', description: `Запрос: "${query}"` });
+    toast({ title: t('compare.compareReady'), description: t('compare.queryDesc', { query }) });
   };
 
   const runDemoScenario = async (scenario: DemoScenario) => {
@@ -63,10 +65,10 @@ export default function Compare() {
 
     if (!leftUser || !rightUser) {
       toast({
-        title: 'Не удалось загрузить пользователей сценария',
+        title: t('compare.scenarioMissing'),
         description: !leftUser
-          ? `Не найден: ${scenario.leftUsername}`
-          : `Не найден: ${scenario.rightUsername}`,
+          ? t('compare.notFoundUser', { name: scenario.leftUsername })
+          : t('compare.notFoundUser', { name: scenario.rightUsername }),
         variant: 'destructive',
       });
     }
@@ -81,10 +83,10 @@ export default function Compare() {
       .filter(Boolean)
       .join(' vs ');
     toast({
-      title: scenario.title,
+      title: t(scenario.titleKey),
       description: personas
-        ? `${personas} · запрос: "${scenario.query}"`
-        : `Запрос: "${scenario.query}"`,
+        ? t('compare.scenarioPersonas', { personas, query: scenario.query })
+        : t('compare.queryDesc', { query: scenario.query }),
     });
   };
 
@@ -120,9 +122,7 @@ export default function Compare() {
           <div className="mb-6 flex items-start gap-2 rounded-notion border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
-              Не выбран ни один пользователь — обе колонки покажут одинаковый
-              результат без персонализации. Выберите хотя бы одного, чтобы увидеть
-              разницу.
+              {t('compare.bothEmpty')}
             </span>
           </div>
         )}
@@ -134,13 +134,13 @@ export default function Compare() {
             user={left.user}
             results={left.results}
             otherResults={right.results}
-            fallbackLabel="Колонка 1"
+            fallbackLabel={t('compare.column1')}
           />
           <ResultColumn
             user={right.user}
             results={right.results}
             otherResults={left.results}
-            fallbackLabel="Колонка 2"
+            fallbackLabel={t('compare.column2')}
           />
         </div>
       </main>

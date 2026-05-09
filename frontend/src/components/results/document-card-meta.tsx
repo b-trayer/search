@@ -1,3 +1,5 @@
+import { useTranslation } from '@/lib/i18n';
+
 interface DocumentCardMetaProps {
   source: string;
   year: number | null;
@@ -6,11 +8,12 @@ interface DocumentCardMetaProps {
 }
 
 export const DocumentCardMeta = ({ source, year, organization, collection }: DocumentCardMetaProps) => {
+  const { t } = useTranslation();
   const parts: string[] = [];
   if (year) parts.push(String(year));
   if (source) parts.push(source);
   if (organization) parts.push(organization);
-  if (collection) parts.push(`Коллекция: ${collection}`);
+  if (collection) parts.push(t('card.collectionLabel', { value: collection }));
 
   if (parts.length === 0) return null;
 

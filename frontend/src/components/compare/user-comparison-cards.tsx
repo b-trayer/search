@@ -1,5 +1,6 @@
 import UserSelect from '@/components/user-select';
 import type { User } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface UserComparisonCardsProps {
   leftUserId: number | null;
@@ -35,9 +36,10 @@ export function UserComparisonCards({
   onLeftUserLoaded,
   onRightUserLoaded,
 }: UserComparisonCardsProps) {
+  const { t } = useTranslation();
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-      <ColumnPanel title="Пользователь 1">
+      <ColumnPanel title={t('compare.user1')}>
         <UserSelect
           selectedUserId={leftUserId}
           onUserChange={onLeftUserChange}
@@ -46,7 +48,7 @@ export function UserComparisonCards({
         />
       </ColumnPanel>
 
-      <ColumnPanel title="Пользователь 2">
+      <ColumnPanel title={t('compare.user2')}>
         <UserSelect
           selectedUserId={rightUserId}
           onUserChange={onRightUserChange}

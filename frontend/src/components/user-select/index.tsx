@@ -6,6 +6,7 @@ import { getUsers, User } from "@/lib/api";
 import { getRoleLabel, getRoleIconComponent } from "./user-role-utils";
 import { UserPreviewCard } from "./user-preview-card";
 import { InterestsEditorDialog } from "./interests-editor-dialog";
+import { useTranslation } from '@/lib/i18n';
 
 interface UserSelectProps {
   selectedUserId: number | null;
@@ -25,13 +26,14 @@ const UserSelect = ({
   const [error, setError] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     getUsers(undefined, 130)
       .then(setUsers)
-      .catch(() => setError("Не удалось загрузить пользователей"))
+      .catch(() => setError(t('user.loadError')))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (onUserLoaded) {
@@ -43,7 +45,7 @@ const UserSelect = ({
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Загрузка пользователей...</span>
+        <span>{t('user.loading')}</span>
       </div>
     );
   }
@@ -72,7 +74,7 @@ const UserSelect = ({
               <span className="truncate">{selectedUser.username}</span>
             ) : (
               <span className="text-notion-text-secondary truncate">
-                {selectedUserId === null ? "Без персонализации" : "Выберите пользователя"}
+                {selectedUserId === null ? t('user.placeholderNoUser') : t('user.placeholderPick')}
               </span>
             )}
           </div>
@@ -85,7 +87,7 @@ const UserSelect = ({
             value="__none__"
             className="rounded-notion pl-2 py-1.5 text-sm text-notion-text-secondary focus:bg-notion-bg-hover focus:text-notion-text data-[state=checked]:bg-notion-bg-active [&>span:first-child]:hidden"
           >
-            Без персонализации
+            {t('user.placeholderNoUser')}
           </SelectItem>
           {users.map((user) => {
             const RoleIcon = getRoleIconComponent(user.role);
@@ -128,8 +130,8 @@ const UserSelect = ({
         <button
           type="button"
           onClick={() => setEditorOpen(true)}
-          title="Редактировать интересы"
-          aria-label="Редактировать интересы"
+          title={t('user.editInterests')}
+          aria-label={t('user.editInterests')}
           className="inline-flex items-center justify-center h-9 w-9 shrink-0 rounded-notion border border-notion-border bg-notion-bg text-notion-text-secondary hover:bg-notion-bg-hover hover:text-notion-text transition-colors"
         >
           <Pencil className="h-4 w-4" />

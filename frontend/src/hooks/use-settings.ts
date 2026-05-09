@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { getWeights, setWeights, applyPreset, getPresets } from '@/lib/api';
 import type { RankingWeights, WeightPreset } from '@/lib/types';
 import { DEFAULT_WEIGHTS, UseSettingsReturn } from './settings/settings-types';
+import { translate } from '@/lib/i18n';
 
 export function useSettings(): UseSettingsReturn {
   const [weights, setWeightsState] = useState<RankingWeights>(DEFAULT_WEIGHTS);
@@ -19,7 +20,7 @@ export function useSettings(): UseSettingsReturn {
       setPreset(presetsRes.current);
       setIsModified(false);
     } catch {
-      setError('Не удалось загрузить настройки');
+      setError(translate('toast.searchSettingsError'));
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +43,7 @@ export function useSettings(): UseSettingsReturn {
       setPreset(presetName);
       setIsModified(false);
     } catch {
-      setError('Не удалось применить пресет');
+      setError(translate('toast.applyPresetError'));
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +56,7 @@ export function useSettings(): UseSettingsReturn {
       await setWeights(weights);
       setIsModified(false);
     } catch {
-      setError('Не удалось сохранить настройки');
+      setError(translate('toast.saveError'));
     } finally {
       setIsLoading(false);
     }

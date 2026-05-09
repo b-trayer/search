@@ -13,6 +13,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { HEADER_CHIP, HEADER_CHIP_PRIMARY } from '@/components/layout/header-chip';
+import { LanguageSwitcher } from '@/components/layout/language-switcher';
+import { useTranslation } from '@/lib/i18n';
 
 interface SettingsHeaderProps {
   isSaving: boolean;
@@ -36,6 +38,9 @@ export function SettingsHeader({
   onShowDiff,
 }: SettingsHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t, plural } = useTranslation();
+
+  const changesLabel = `${pendingChanges} ${plural('settings.changes', pendingChanges)}`;
 
   return (
     <header className="sticky top-0 z-50 border-b border-notion-border bg-notion-bg/80 backdrop-blur-md">
@@ -44,7 +49,7 @@ export function SettingsHeader({
           <div className="flex items-center gap-2 min-w-0">
             <SlidersHorizontal className="h-5 w-5 shrink-0 text-notion-text-tertiary" />
             <h1 className="text-sm font-medium text-notion-text leading-none truncate">
-              Настройки ранжирования
+              {t('settings.title')}
             </h1>
             {hasChanges && pendingChanges > 0 && (
               onShowDiff ? (
@@ -52,22 +57,23 @@ export function SettingsHeader({
                   type="button"
                   onClick={onShowDiff}
                   className="inline-flex h-5 items-center rounded-notion bg-notion-accent-light px-2 text-[11px] tabular-nums text-notion-accent transition-colors hover:bg-notion-accent/20"
-                  title="Показать список изменений"
+                  title={t('settings.showDiff')}
                 >
-                  {pendingChanges} {pendingChangesWord(pendingChanges)}
+                  {changesLabel}
                 </button>
               ) : (
                 <span className="inline-flex h-5 items-center rounded-notion bg-notion-accent-light px-2 text-[11px] tabular-nums text-notion-accent">
-                  {pendingChanges} {pendingChangesWord(pendingChanges)}
+                  {changesLabel}
                 </span>
               )
             )}
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <Link to="/" className={HEADER_CHIP}>
               <ArrowLeft className="h-4 w-4 text-notion-text-secondary" />
-              <span className="hidden sm:inline">Назад к поиску</span>
+              <span className="hidden sm:inline">{t('common.back')}</span>
             </Link>
 
             {onExport && (
@@ -76,10 +82,10 @@ export function SettingsHeader({
                 onClick={onExport}
                 disabled={isSaving}
                 className={HEADER_CHIP}
-                title="Экспортировать настройки в JSON"
+                title={t('settings.exportTitle')}
               >
                 <Download className="h-4 w-4 text-notion-text-secondary" />
-                <span className="hidden md:inline">Экспорт</span>
+                <span className="hidden md:inline">{t('settings.export')}</span>
               </button>
             )}
 
@@ -101,10 +107,10 @@ export function SettingsHeader({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isSaving}
                   className={HEADER_CHIP}
-                  title="Загрузить настройки из JSON"
+                  title={t('settings.importTitle')}
                 >
                   <Upload className="h-4 w-4 text-notion-text-secondary" />
-                  <span className="hidden md:inline">Импорт</span>
+                  <span className="hidden md:inline">{t('settings.import')}</span>
                 </button>
               </>
             )}
@@ -117,24 +123,23 @@ export function SettingsHeader({
                   className={HEADER_CHIP}
                 >
                   <RotateCcw className="h-4 w-4 text-notion-text-secondary" />
-                  <span className="hidden sm:inline">Сбросить все</span>
+                  <span className="hidden sm:inline">{t('settings.resetAll')}</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Сбросить все настройки?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('settings.resetConfirmTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Веса, матрица f_type, скоры f_topic и ключевые слова специализаций
-                    будут возвращены к значениям по умолчанию. Это действие нельзя отменить.
+                    {t('settings.resetConfirmDesc')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={onReset}
                     className="bg-red-600 text-white hover:bg-red-700"
                   >
-                    Сбросить
+                    {t('common.reset')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -145,28 +150,19 @@ export function SettingsHeader({
               onClick={onSave}
               disabled={isSaving || !hasChanges}
               className={HEADER_CHIP_PRIMARY}
-              title="Сохранить"
-              aria-label="Сохранить"
+              title={t('settings.save')}
+              aria-label={t('settings.save')}
             >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Сохранить</span>
+              <span className="hidden sm:inline">{t('settings.save')}</span>
             </button>
           </div>
         </div>
       </div>
     </header>
   );
-}
-
-function pendingChangesWord(count: number): string {
-  const lastDigit = count % 10;
-  const lastTwo = count % 100;
-  if (lastTwo >= 11 && lastTwo <= 19) return 'изменений';
-  if (lastDigit === 1) return 'изменение';
-  if (lastDigit >= 2 && lastDigit <= 4) return 'изменения';
-  return 'изменений';
 }

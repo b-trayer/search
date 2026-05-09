@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useTranslation } from '@/lib/i18n';
 
 interface YearRangeSectionProps {
   bounds: { min: number | null; max: number | null };
@@ -17,15 +18,6 @@ interface PresetOption {
   to: number | null;
 }
 
-function buildPresets(maxYear: number): PresetOption[] {
-  return [
-    { label: `С ${maxYear - 5}`, from: maxYear - 5, to: null },
-    { label: 'С 2010', from: 2010, to: null },
-    { label: 'С 2000', from: 2000, to: null },
-    { label: 'До 1990', from: null, to: 1990 },
-  ];
-}
-
 function isPresetActive(preset: PresetOption, from: number | null, to: number | null) {
   return preset.from === from && preset.to === to;
 }
@@ -37,6 +29,7 @@ export function YearRangeSection({
   onChange,
   defaultOpen = true,
 }: YearRangeSectionProps) {
+  const { t } = useTranslation();
   const min = bounds.min ?? 1900;
   const max = bounds.max ?? new Date().getFullYear();
 
@@ -48,7 +41,13 @@ export function YearRangeSection({
   }, [yearFrom, yearTo, min, max]);
 
   const isActive = yearFrom !== null || yearTo !== null;
-  const presets = buildPresets(max);
+
+  const presets: PresetOption[] = [
+    { label: t('filters.from', { year: max - 5 }), from: max - 5, to: null },
+    { label: t('filters.from', { year: 2010 }), from: 2010, to: null },
+    { label: t('filters.from', { year: 2000 }), from: 2000, to: null },
+    { label: t('filters.until', { year: 1990 }), from: null, to: 1990 },
+  ];
 
   const commit = (next: [number, number]) => {
     const [from, to] = next;
@@ -61,7 +60,7 @@ export function YearRangeSection({
         <button className="group flex w-full items-center justify-between py-2">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-notion-text-tertiary" />
-            <span className="text-sm font-medium text-notion-text">Год издания</span>
+            <span className="text-sm font-medium text-notion-text">{t('filters.year')}</span>
             {isActive && (
               <span className="inline-flex h-5 items-center rounded-notion bg-notion-bg-secondary px-1.5 text-[11px] tabular-nums text-notion-text-secondary">
                 {yearFrom ?? min}–{yearTo ?? max}
@@ -129,7 +128,7 @@ export function YearRangeSection({
                 onClick={() => onChange(null, null)}
                 className="rounded-notion border border-notion-border bg-notion-bg px-2 py-1 text-xs text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
               >
-                Сбросить
+                {t('common.reset')}
               </button>
             )}
           </div>

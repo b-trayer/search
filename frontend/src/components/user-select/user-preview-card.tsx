@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { User } from "@/lib/api";
 import { getRoleLabel, getRoleIconComponent } from "./user-role-utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface UserPreviewCardProps {
   user: User;
@@ -8,6 +9,7 @@ interface UserPreviewCardProps {
 
 export const UserPreviewCard = ({ user }: UserPreviewCardProps) => {
   const RoleIcon = getRoleIconComponent(user.role);
+  const { t } = useTranslation();
 
   return (
     <div className="absolute top-full left-0 right-0 mt-2 p-3 rounded-lg bg-card border border-border shadow-lg z-50 pointer-events-none animate-fade-in">
@@ -19,7 +21,7 @@ export const UserPreviewCard = ({ user }: UserPreviewCardProps) => {
           <p className="font-medium text-sm">{user.username}</p>
           <p className="text-xs text-muted-foreground">
             {getRoleLabel(user.role)}
-            {user.course && `, ${user.course} курс`}
+            {user.course && `, ${t('preview.userCourse', { n: user.course })}`}
           </p>
           {user.faculty && (
             <p className="text-xs text-muted-foreground mt-1">🏛 {user.faculty}</p>

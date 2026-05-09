@@ -1,4 +1,5 @@
 import type { DocumentResult } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface ScoreBreakdownProps {
   doc: DocumentResult;
@@ -66,13 +67,14 @@ function CompactBreakdown({ doc }: { doc: DocumentResult }) {
 }
 
 function FullBreakdown({ doc }: { doc: DocumentResult }) {
+  const { t } = useTranslation();
   return (
     <div
       className="p-3 bg-notion-bg-secondary rounded-notion text-xs tabular-nums space-y-3"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="text-notion-text-tertiary text-center pb-2 border-b border-notion-border/50">
-        score = log(1+BM25) + w<sub>u</sub>·f(U,D) + β<sub>ctr</sub>·log(1+10·CTR̃)
+        {t('score.formula')}
       </div>
 
       <div className="space-y-3">
@@ -86,7 +88,7 @@ function FullBreakdown({ doc }: { doc: DocumentResult }) {
 
         <div className="pt-2 border-t border-notion-border">
           <div className="grid grid-cols-[1fr_auto] gap-x-3">
-            <span className="font-semibold text-notion-text">Итоговый скор</span>
+            <span className="font-semibold text-notion-text">{t('score.final')}</span>
             <span className="text-right font-semibold text-notion-accent">
               {doc.final_score.toFixed(3)}
             </span>
@@ -96,7 +98,7 @@ function FullBreakdown({ doc }: { doc: DocumentResult }) {
             {(doc.ctr_contrib ?? 0).toFixed(3)} ≈ {doc.final_score.toFixed(3)}
           </div>
           <div className="text-[10px] text-notion-text-tertiary mt-0.5 italic">
-            Итоговый скор считается из неокругленных компонент, потому показанные слагаемые могут давать сумму, отличающуюся на ±0.001.
+            {t('score.compactDisclaimer')}
           </div>
         </div>
       </div>
@@ -105,12 +107,13 @@ function FullBreakdown({ doc }: { doc: DocumentResult }) {
 }
 
 function PersonalizationDetails({ doc }: { doc: DocumentResult }) {
+  const { t } = useTranslation();
   if (!doc.weights) return null;
 
   return (
     <div className="pl-2 border-l-2 border-notion-accent/30 space-y-1">
       <div className="text-notion-text-tertiary text-[10px] uppercase tracking-wide mb-1">
-        Персонализация f(U,D)
+        {t('score.personalizationHeader')}
       </div>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-notion-text-tertiary">
         <span>f_type (raw)</span>
@@ -140,12 +143,13 @@ function PersonalizationDetails({ doc }: { doc: DocumentResult }) {
 }
 
 function CTRDetails({ doc }: { doc: DocumentResult }) {
+  const { t } = useTranslation();
   if (!doc.weights) return null;
 
   return (
     <div className="pl-2 border-l-2 border-notion-border-strong space-y-1">
       <div className="text-notion-text-tertiary text-[10px] uppercase tracking-wide mb-1">
-        CTR компонент
+        {t('score.ctrHeader')}
       </div>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-notion-text-tertiary">
         <span>clicks / impressions</span>
@@ -156,10 +160,10 @@ function CTRDetails({ doc }: { doc: DocumentResult }) {
           {doc.impressions > 0 ? ((doc.clicks / doc.impressions) * 100).toFixed(2) : '0.00'}%
         </span>
 
-        <span>α_prior (псевдо-клики)</span>
+        <span>{t('score.alphaPriorPseudoClicks')}</span>
         <span className="text-right">{doc.weights.ctr_alpha_prior}</span>
 
-        <span>β_prior (псевдо-показы)</span>
+        <span>{t('score.betaPriorPseudoImpressions')}</span>
         <span className="text-right">{doc.weights.ctr_beta_prior}</span>
 
         <span>smoothed_CTR = (clicks + α_prior) / (impr + α_prior + β_prior)</span>

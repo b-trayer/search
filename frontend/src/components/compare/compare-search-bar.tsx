@@ -1,4 +1,5 @@
 import { Loader2, Search } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface CompareSearchBarProps {
   query: string;
@@ -8,13 +9,14 @@ interface CompareSearchBarProps {
 }
 
 export function CompareSearchBar({ query, onQueryChange, onCompare, isLoading }: CompareSearchBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex w-full items-center gap-2">
       <div className="relative flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-notion-text-tertiary" />
         <input
           type="text"
-          placeholder="Введите запрос для сравнения..."
+          placeholder={t('compare.placeholder')}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onCompare()}
@@ -32,7 +34,7 @@ export function CompareSearchBar({ query, onQueryChange, onCompare, isLoading }:
         ) : (
           <Search className="h-4 w-4" />
         )}
-        Сравнить
+        {t('compare.compareButton')}
       </button>
     </div>
   );

@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { getDocumentTypeLabel, getDatabaseLabel } from './filter-utils';
+import { useTranslation } from '@/lib/i18n';
 import type { Filters } from '@/hooks/use-filters';
 
 interface ChipDef {
@@ -14,19 +15,20 @@ interface ActiveFilterChipsProps {
   onReset: () => void;
 }
 
-function buildYearLabel(from: number | null, to: number | null): string | null {
-  if (from === null && to === null) return null;
-  if (from !== null && to !== null) return `${from}\u2013${to}`;
-  if (from !== null) return `С ${from}`;
-  return `До ${to}`;
-}
-
 export function ActiveFilterChips({
   filters,
   onFiltersChange,
   onReset,
 }: ActiveFilterChipsProps) {
+  const { t } = useTranslation();
   const chips: ChipDef[] = [];
+
+  const buildYearLabel = (from: number | null, to: number | null): string | null => {
+    if (from === null && to === null) return null;
+    if (from !== null && to !== null) return `${from}\u2013${to}`;
+    if (from !== null) return t('filters.from', { year: from });
+    return t('filters.until', { year: to as number });
+  };
 
   const yearLabel = buildYearLabel(filters.year_from, filters.year_to);
   if (yearLabel) {
@@ -112,7 +114,7 @@ export function ActiveFilterChips({
   if (filters.has_pdf === true) {
     chips.push({
       key: 'has_pdf',
-      label: 'Доступно онлайн',
+      label: t('filters.online'),
       onRemove: () => onFiltersChange({ ...filters, has_pdf: null }),
     });
   }
@@ -138,7 +140,7 @@ export function ActiveFilterChips({
           onClick={onReset}
           className="inline-flex h-7 items-center gap-1 rounded-notion px-2 text-xs text-notion-text-secondary transition-colors hover:bg-notion-bg-hover hover:text-notion-text"
         >
-          Очистить все
+          {t('common.clearAll')}
         </button>
       )}
     </div>

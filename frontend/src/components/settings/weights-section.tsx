@@ -2,11 +2,12 @@ import { Info, Wand2, X } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { HEADER_CHIP, HEADER_CHIP_PRIMARY } from '@/components/layout/header-chip';
 import type { RankingWeights, WeightPreset } from '@/lib/types';
-import { WEIGHT_CONFIG, PRESET_LABELS, WEIGHT_TOOLTIPS } from './constants';
+import { WEIGHT_CONFIG, PRESET_LABEL_KEYS } from './constants';
 import { SectionResetButton } from './section-reset-button';
 import { normalizeAlphas } from '@/hooks/settings/changes';
 import type { CustomPresetInfo } from '@/hooks/settings/types';
 import { CustomPresetInput } from './custom-preset-input';
+import { useTranslation } from '@/lib/i18n';
 
 interface WeightsSectionProps {
   weights: RankingWeights;
@@ -37,6 +38,7 @@ export function WeightsSection({
   hasSectionChanges = false,
   isWeightChanged,
 }: WeightsSectionProps) {
+  const { t } = useTranslation();
   const alphaSum = weights.alpha_type + weights.alpha_topic;
   const alphaSumOk = Math.abs(alphaSum - 1) < 0.011;
 
@@ -59,7 +61,9 @@ export function WeightsSection({
         lines.push(`${k}: ${cur.toFixed(2)} → ${tgt.toFixed(2)} (${sign}${Math.abs(delta).toFixed(2)})`);
       }
     }
-    return lines.length === 0 ? 'Совпадает с текущими' : `Изменится:\n${lines.join('\n')}`;
+    return lines.length === 0
+      ? t('weights.presetMatches')
+      : `${t('weights.presetWillChange')}\n${lines.join('\n')}`;
   };
 
   return (
@@ -69,23 +73,23 @@ export function WeightsSection({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-notion-text">
-          Веса формулы ранжирования
+          {t('weights.title')}
         </h2>
         {onResetSection && (
           <SectionResetButton
             disabled={isSaving}
             hasChanges={hasSectionChanges}
             onConfirm={onResetSection}
-            sectionName="Веса"
+            sectionName={t('settings.section.weights')}
           />
         )}
       </div>
       <p className="mt-1 text-sm text-notion-text-secondary">
-        score = log(1+BM25) + w<sub>user</sub> × f(U,D) + β × log(1+CTR)
+        {t('weights.formulaCaption')}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        {(Object.keys(PRESET_LABELS) as WeightPreset[]).map((preset) => (
+        {(Object.keys(PRESET_LABEL_KEYS) as WeightPreset[]).map((preset) => (
           <button
             key={preset}
             type="button"
@@ -94,7 +98,7 @@ export function WeightsSection({
             title={presetTooltip(preset)}
             className={currentPreset === preset ? HEADER_CHIP_PRIMARY : HEADER_CHIP}
           >
-            {PRESET_LABELS[preset]}
+            {t(PRESET_LABEL_KEYS[preset])}
           </button>
         ))}
         {customPresets.length > 0 && (
@@ -126,8 +130,8 @@ export function WeightsSection({
                   className={`rounded-notion p-0.5 transition-opacity hover:opacity-100 ${
                     active ? 'opacity-70' : 'opacity-50'
                   }`}
-                  aria-label={`Удалить пресет «${name}»`}
-                  title="Удалить пресет"
+                  aria-label={t('customPreset.removeAria', { name })}
+                  title={t('customPreset.removeTitle')}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -139,7 +143,7 @@ export function WeightsSection({
           <CustomPresetInput
             disabled={isSaving}
             existingNames={[
-              ...(Object.keys(PRESET_LABELS) as string[]),
+              ...(Object.keys(PRESET_LABEL_KEYS) as string[]),
               ...customPresets.map((p) => p.name),
             ]}
             onSave={onSaveCustomPreset}
@@ -150,6 +154,7 @@ export function WeightsSection({
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {WEIGHT_CONFIG.map((config) => {
           const changed = isWeightChanged ? isWeightChanged(config.key) : false;
+          const tip = config.tipKey ? t(config.tipKey) : undefined;
           return (
           <div
             key={config.key}
@@ -162,19 +167,19 @@ export function WeightsSection({
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <label className="flex items-center gap-1 text-sm font-medium text-notion-text">
-                  {config.label}
-                  {WEIGHT_TOOLTIPS[config.key] && (
+                  {t(config.labelKey)}
+                  {tip && (
                     <span
                       className="cursor-help text-notion-text-tertiary"
-                      title={WEIGHT_TOOLTIPS[config.key]}
-                      aria-label={WEIGHT_TOOLTIPS[config.key]}
+                      title={tip}
+                      aria-label={tip}
                     >
                       <Info className="h-3.5 w-3.5" />
                     </span>
                   )}
                 </label>
                 <p className="mt-0.5 text-xs text-notion-text-tertiary">
-                  {config.description}
+                  {t(config.descKey)}
                 </p>
               </div>
               <span className="shrink-0 tabular-nums text-sm font-medium text-notion-text">
@@ -209,9 +214,7 @@ export function WeightsSection({
             <span data-testid="alpha-sum-value" className="tabular-nums font-medium">
               {alphaSum.toFixed(2)}
             </span>
-            {alphaSumOk
-              ? ' – корректно (линейная комбинация f_type и f_topic).'
-              : ' – рекомендуется = 1.00, чтобы веса f_type и f_topic складывались в 100%.'}
+            {alphaSumOk ? ` ${t('weights.alphaSumOk')}` : ` ${t('weights.alphaSumWarn')}`}
           </span>
         </div>
         {!alphaSumOk && (
@@ -220,10 +223,10 @@ export function WeightsSection({
             onClick={handleNormalizeAlphas}
             disabled={isSaving}
             className="inline-flex h-7 shrink-0 items-center gap-1 rounded-notion border border-amber-300 bg-amber-100/60 px-2 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:opacity-50"
-            title="Привести α₁ + α₂ к 1.00 пропорционально"
+            title={t('weights.normalizeTitle')}
           >
             <Wand2 className="h-3 w-3" />
-            Нормализовать
+            {t('weights.normalize')}
           </button>
         )}
       </div>

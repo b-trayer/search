@@ -13,9 +13,11 @@ import { SearchFooter } from '@/components/search/search-footer';
 import FilterPanel from '@/components/filter-panel';
 import { MobileFilterToggle, ActiveFilterChips } from '@/components/filters';
 import type { DocumentResult, SearchField, SortBy } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 export default function Search() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [urlParams, setUrlParams] = useSearchParams();
 
   const initialState = useRef(parseSearchParams(urlParams)).current;
@@ -83,11 +85,11 @@ export default function Search() {
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
-      toast({ title: 'Введите поисковый запрос', description: 'Поле поиска не может быть пустым', variant: 'destructive' });
+      toast({ title: t('search.toast.empty.title'), description: t('search.toast.empty.desc'), variant: 'destructive' });
       return;
     }
     await search(selectedUserId ?? undefined, enablePersonalization, convertFiltersToSearchParams(filters), 1, searchField, sortBy);
-  }, [query, search, selectedUserId, enablePersonalization, filters, searchField, sortBy, toast]);
+  }, [query, search, selectedUserId, enablePersonalization, filters, searchField, sortBy, toast, t]);
 
   const onDocumentClick = useCallback((doc: DocumentResult) => {
     handleDocumentClick(doc, selectedUserId ?? undefined);

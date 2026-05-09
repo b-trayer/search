@@ -1,5 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getLanguage } from '@/lib/i18n';
+import { ru } from '@/lib/i18n/translations.ru';
+import { en } from '@/lib/i18n/translations.en';
+
+const DICTS = { ru, en } as const;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,36 +35,53 @@ export function formatOtherAuthors(otherAuthors: string[], maxVisible: number = 
   if (otherAuthors.length <= maxVisible) {
     return otherAuthors.join(', ');
   }
-  return `${otherAuthors.slice(0, maxVisible).join(', ')} и еще ${otherAuthors.length - maxVisible}`;
+  const remaining = otherAuthors.length - maxVisible;
+  const visible = otherAuthors.slice(0, maxVisible).join(', ');
+  const lang = getLanguage();
+  const suffix =
+    lang === 'ru'
+      ? `и еще ${remaining}`
+      : `and ${remaining} more`;
+  return `${visible} ${suffix}`;
 }
 
-const DOCUMENT_TYPE_RU: Record<string, string> = {
-  'book': 'Книга',
-  'serial': 'Периодическое издание',
-  'journal_article': 'Статья из журнала',
-  'textbook': 'Учебник',
-  'dissertation': 'Диссертация',
-  'collection': 'Сборник',
-  'article': 'Статья',
-  'manual': 'Методическое пособие',
-  'nsu_article': 'Статья НГУ',
-  'monograph': 'Монография',
-  'abstract': 'Реферат',
-  'thesis': 'Дипломная работа',
-  'conference': 'Материалы конференции',
-  'reference': 'Справочник',
-  'electronic_copy': 'Электронная копия',
-  'methodical': 'Методическое пособие',
-  'doctoral_dissertation': 'Докторская диссертация',
-  'proceedings': 'Труды конференции',
-  'tutorial': 'Учебное пособие',
-  'electronic': 'Электронный ресурс',
-  'dictionary': 'Словарь',
-  'book_article': 'Статья из книги',
-  'network_resource': 'Сетевой ресурс',
-  'autoreferat': 'Автореферат',
-  'other': 'Другое',
+const RUSSIAN_TO_KEY: Record<string, string> = {
+  'Учебник': 'textbook',
+  'Диссертация': 'dissertation',
+  'Статья': 'article',
+  'Монография': 'monograph',
+  'Справочник': 'reference',
 };
+
+const KEY_LIST = [
+  'book',
+  'serial',
+  'journal_article',
+  'textbook',
+  'dissertation',
+  'collection',
+  'article',
+  'manual',
+  'methodical',
+  'nsu_article',
+  'monograph',
+  'abstract',
+  'thesis',
+  'conference',
+  'reference',
+  'electronic_copy',
+  'doctoral_dissertation',
+  'proceedings',
+  'tutorial',
+  'electronic',
+  'dictionary',
+  'book_article',
+  'network_resource',
+  'autoreferat',
+  'other',
+] as const;
+
+const KEY_SET = new Set<string>(KEY_LIST);
 
 const MATERIAL_MARKER_KEYWORDS = [
   'учебники',
@@ -109,11 +131,20 @@ const NOISY_RUBRICS = new Set([
   'периодические издания',
 ]);
 
+function lookupDocType(key: string): string | null {
+  const dict = DICTS[getLanguage()] ?? DICTS.ru;
+  return dict[`dt.${key}`] ?? null;
+}
+
 export function formatBadgeText(text: string): string {
   if (!text) return '';
   const lower = text.toLowerCase();
-  if (DOCUMENT_TYPE_RU[lower]) {
-    return DOCUMENT_TYPE_RU[lower];
+  if (KEY_SET.has(lower)) {
+    return lookupDocType(lower) ?? text;
+  }
+  const mappedKey = RUSSIAN_TO_KEY[text];
+  if (mappedKey) {
+    return lookupDocType(mappedKey) ?? text;
   }
   const withoutParens = text.replace(/\s*\([^)]*\)/g, '').trim();
   if (!withoutParens) return '';

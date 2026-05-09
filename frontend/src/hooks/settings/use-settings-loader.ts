@@ -4,6 +4,7 @@ import {
   getTopicScores, getSpecializationTopics,
 } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { translate } from '@/lib/i18n';
 import { type SettingsData, deepClone } from './types';
 
 export function useSettingsLoader(
@@ -45,7 +46,7 @@ export function useSettingsLoader(
         hasChanges: false,
       });
     } catch {
-      toast({ title: 'Ошибка загрузки', variant: 'destructive' });
+      toast({ title: translate('toast.loadError'), variant: 'destructive' });
       setData(prev => ({ ...prev, isLoading: false }));
     }
   }, [setData, toast]);

@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getUsers, getUser } from '@/lib/api';
 import type { User } from '@/lib/types';
+import { translate } from '@/lib/i18n';
 
 interface UseUsersReturn {
   users: User[];
@@ -29,7 +30,7 @@ export function useUsers(): UseUsersReturn {
       setUsers(userList);
     } catch (err) {
       console.error('Failed to load users:', err);
-      setError('Не удалось загрузить пользователей');
+      setError(translate('user.loadError'));
     } finally {
       setIsLoading(false);
     }

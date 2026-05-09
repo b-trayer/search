@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Clock, RotateCcw, Trash2 } from 'lucide-react';
 import { readHistory, removeHistoryEntry, type HistoryEntry } from '@/hooks/settings/history';
 import type { SettingsExport } from '@/hooks/settings/io';
+import { useTranslation } from '@/lib/i18n';
 
 interface HistorySectionProps {
   refreshKey: number;
@@ -10,10 +11,26 @@ interface HistorySectionProps {
 
 export function HistorySection({ refreshKey, onRestore }: HistorySectionProps) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
+  const { t, language } = useTranslation();
 
   useEffect(() => {
     setEntries(readHistory());
   }, [refreshKey]);
+
+  const dateLocale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const formatDate = (iso: string): string => {
+    try {
+      return new Date(iso).toLocaleString(dateLocale, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <section
@@ -22,20 +39,19 @@ export function HistorySection({ refreshKey, onRestore }: HistorySectionProps) {
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-notion-text">
-          История сохранений
+          {t('history.title')}
         </h2>
         <span className="text-xs text-notion-text-tertiary">
-          хранится локально, последние 10
+          {t('history.lastN')}
         </span>
       </div>
       <p className="mt-1 text-sm text-notion-text-secondary">
-        Каждое нажатие «Сохранить» создает снимок. Можно вернуться к любой версии,
-        будут заполнены поля редактора (нужно будет еще раз нажать «Сохранить»).
+        {t('history.desc')}
       </p>
 
       {entries.length === 0 ? (
         <div className="mt-4 rounded-notion border border-notion-border bg-notion-bg-secondary p-6 text-center text-sm text-notion-text-secondary">
-          Еще не было сохранений. Нажмите «Сохранить» в шапке, чтобы создать первый снимок.
+          {t('history.empty')}
         </div>
       ) : (
         <ul className="mt-4 divide-y divide-notion-border rounded-notion border border-notion-border">
@@ -67,17 +83,17 @@ export function HistorySection({ refreshKey, onRestore }: HistorySectionProps) {
                     })
                   }
                   className="inline-flex h-7 items-center gap-1 rounded-notion border border-notion-border bg-notion-bg px-2 text-xs text-notion-text transition-colors hover:bg-notion-bg-hover"
-                  title="Восстановить эту версию"
+                  title={t('history.restoreTitle')}
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Восстановить
+                  {t('history.restore')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEntries(removeHistoryEntry(entry.id))}
                   className="inline-flex h-7 w-7 items-center justify-center rounded-notion text-notion-text-tertiary transition-colors hover:bg-notion-bg-hover hover:text-red-600"
-                  aria-label="Удалить из истории"
-                  title="Удалить"
+                  aria-label={t('history.removeAria')}
+                  title={t('history.removeTitle')}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -88,18 +104,4 @@ export function HistorySection({ refreshKey, onRestore }: HistorySectionProps) {
       )}
     </section>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return iso;
-  }
 }

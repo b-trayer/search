@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { DiffEntry } from '@/hooks/settings/changes';
+import { useTranslation } from '@/lib/i18n';
 
 interface DiffDialogProps {
   open: boolean;
@@ -17,11 +18,11 @@ interface DiffDialogProps {
   isSaving?: boolean;
 }
 
-const GROUP_LABELS: Record<DiffEntry['group'], string> = {
-  weights: 'Веса',
-  matrix: 'Матрица f_type',
-  topics: 'Скоры f_topic',
-  specializations: 'Специализации',
+const GROUP_LABEL_KEYS: Record<DiffEntry['group'], string> = {
+  weights: 'diff.group.weights',
+  matrix: 'diff.group.matrix',
+  topics: 'diff.group.topics',
+  specializations: 'diff.group.specializations',
 };
 
 export function DiffDialog({
@@ -31,17 +32,18 @@ export function DiffDialog({
   onSave,
   isSaving,
 }: DiffDialogProps) {
+  const { t } = useTranslation();
   const grouped = groupBy(entries, (e) => e.group);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Что изменилось</DialogTitle>
+          <DialogTitle>{t('diff.title')}</DialogTitle>
           <DialogDescription>
             {entries.length === 0
-              ? 'Нет несохраненных изменений.'
-              : `Несохраненных изменений: ${entries.length}.`}
+              ? t('diff.empty')
+              : t('diff.count', { count: entries.length })}
           </DialogDescription>
         </DialogHeader>
 
@@ -50,7 +52,7 @@ export function DiffDialog({
             {(Object.keys(grouped) as DiffEntry['group'][]).map((group) => (
               <div key={group}>
                 <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-notion-text-tertiary">
-                  {GROUP_LABELS[group]} · {grouped[group].length}
+                  {t(GROUP_LABEL_KEYS[group])} · {grouped[group].length}
                 </h4>
                 <ul className="divide-y divide-notion-border rounded-notion border border-notion-border bg-notion-bg-secondary">
                   {grouped[group].map((e, idx) => (
@@ -80,7 +82,7 @@ export function DiffDialog({
             onClick={() => onOpenChange(false)}
             className="inline-flex h-9 items-center rounded-notion border border-notion-border bg-notion-bg px-3 text-sm text-notion-text transition-colors hover:bg-notion-bg-hover"
           >
-            Закрыть
+            {t('common.close')}
           </button>
           {onSave && entries.length > 0 && (
             <button
@@ -92,7 +94,7 @@ export function DiffDialog({
               disabled={isSaving}
               className="inline-flex h-9 items-center gap-1.5 rounded-notion bg-notion-accent px-3 text-sm font-medium text-white transition-colors hover:bg-notion-accent-hover disabled:opacity-50"
             >
-              Применить и сохранить
+              {t('diff.applyAndSave')}
             </button>
           )}
         </DialogFooter>

@@ -8,6 +8,7 @@ import {
 import type { CompareStats as Stats } from '@/hooks/use-compare';
 import { formatSigned } from '@/hooks/compare/compare-types';
 import type { User } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface CompareStatsProps {
   stats: Stats;
@@ -50,35 +51,36 @@ function formatPersonaLabel(user: User | null, fallback: string): string {
 }
 
 export default function CompareStats({ stats, leftUser, rightUser }: CompareStatsProps) {
+  const { t } = useTranslation();
   const commonPct = stats.total > 0 ? Math.round((stats.common / stats.total) * 100) : 0;
   const spearmanText =
     stats.spearman === null ? '—' : stats.spearman.toFixed(2);
 
-  const leftLabel = formatPersonaLabel(leftUser, 'Колонка 1');
-  const rightLabel = formatPersonaLabel(rightUser, 'Колонка 2');
+  const leftLabel = formatPersonaLabel(leftUser, t('compare.column1'));
+  const rightLabel = formatPersonaLabel(rightUser, t('compare.column2'));
 
   return (
     <div className="mb-6 rounded-notion border border-notion-border bg-notion-bg p-4">
       <div className="mb-4 flex items-center gap-2">
         <Calculator className="h-4 w-4 text-notion-text-tertiary" />
-        <span className="text-sm font-medium text-notion-text">Анализ различий</span>
+        <span className="text-sm font-medium text-notion-text">{t('compare.statsTitle')}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <Metric
-          label="Общих в топ-10"
+          label={t('compare.commonTop10')}
           value={
             <>
-              {stats.common} из {stats.total}
+              {stats.common} / {stats.total}
               <span className="ml-1 text-xs font-normal text-notion-text-tertiary">
                 ({commonPct}%)
               </span>
             </>
           }
-          hint="Сколько документов оказались в топ-10 у обоих пользователей одновременно."
+          hint={t('compare.commonHint')}
         />
         <Metric
-          label="Уникальных"
+          label={t('compare.unique')}
           value={
             <span>
               {stats.uniqueLeft}
@@ -86,15 +88,15 @@ export default function CompareStats({ stats, leftUser, rightUser }: CompareStat
               {stats.uniqueRight}
             </span>
           }
-          hint={`Документы, которые есть только у одного из пользователей: ${leftLabel} / ${rightLabel}.`}
+          hint={t('compare.uniqueHint', { left: leftLabel, right: rightLabel })}
         />
         <Metric
-          label="ρ Спирмена"
+          label={t('compare.spearman')}
           value={spearmanText}
-          hint="Корреляция позиций по общим документам. 1.00 — идентичный порядок, 0 — независимый, -1 — обратный."
+          hint={t('compare.spearmanHint')}
         />
         <Metric
-          label="Средний final_score"
+          label={t('compare.avgScore')}
           value={
             <span>
               {stats.avgFinalScore1.toFixed(2)}
@@ -102,17 +104,17 @@ export default function CompareStats({ stats, leftUser, rightUser }: CompareStat
               {stats.avgFinalScore2.toFixed(2)}
             </span>
           }
-          hint={`Среднее значение итогового скоринга по топ-10: ${leftLabel} / ${rightLabel}.`}
+          hint={t('compare.avgScoreHint', { left: leftLabel, right: rightLabel })}
         />
         <Metric
-          label={`+ персонализация (${leftLabel})`}
+          label={t('compare.persContrib', { label: leftLabel })}
           value={formatSigned(stats.avgPersonalization1)}
-          hint="Средний вклад персонализации (w_user · f(U,D)) в итоговый скоринг по этой колонке."
+          hint={t('compare.persContribHint')}
         />
         <Metric
-          label={`+ персонализация (${rightLabel})`}
+          label={t('compare.persContrib', { label: rightLabel })}
           value={formatSigned(stats.avgPersonalization2)}
-          hint="Средний вклад персонализации (w_user · f(U,D)) в итоговый скоринг по этой колонке."
+          hint={t('compare.persContribHint')}
         />
       </div>
     </div>

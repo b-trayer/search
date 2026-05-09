@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { PositionChip, ScoreBreakdown } from '@/components/results';
 import { searchDocuments, getUsers } from '@/lib/api';
 import type { DocumentResult, RankingWeights, User } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface TestPreviewProps {
   currentWeights: RankingWeights;
@@ -17,6 +18,7 @@ interface PreviewResult {
 }
 
 export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('квантовая механика');
   const [enablePersonalization, setEnablePersonalization] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
@@ -97,7 +99,7 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
       setResults(merged);
     } catch (e) {
       if (ctl.signal.aborted) return;
-      setError(e instanceof Error ? e.message : 'Не удалось выполнить запрос');
+      setError(e instanceof Error ? e.message : t('preview.queryError'));
       setResults(null);
       setBaselineResults(null);
     } finally {
@@ -112,16 +114,14 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-notion-text">
-          Тест-превью результатов
+          {t('preview.title')}
         </h2>
         <span className="text-xs text-notion-text-tertiary">
-          применяет текущие настройки только к этому запросу
+          {t('preview.subtitle')}
         </span>
       </div>
       <p className="mt-1 text-sm text-notion-text-secondary">
-        Запрос ранжируется на лету с текущими настройками, сохранять не нужно.
-        Включите режим сравнения и увидите, насколько каждый документ поднялся или
-        упал по сравнению с последним сохранением.
+        {t('preview.desc')}
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr,auto]">
@@ -134,7 +134,7 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
             onKeyDown={(e) => {
               if (e.key === 'Enter') runSearch();
             }}
-            placeholder="Например: квантовая механика"
+            placeholder={t('preview.placeholder')}
             className="h-10 w-full rounded-notion border border-notion-border bg-notion-bg pl-9 pr-3 text-sm text-notion-text placeholder:text-notion-text-tertiary outline-none transition-colors focus:border-notion-accent focus:ring-2 focus:ring-notion-accent/20"
           />
         </div>
@@ -149,23 +149,23 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
           ) : (
             <Play className="h-4 w-4" />
           )}
-          Поиск
+          {t('preview.searchButton')}
         </button>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
         <label className="flex items-center gap-2 text-notion-text-secondary">
-          <span>Пользователь:</span>
+          <span>{t('preview.userLabel')}</span>
           <select
             value={userId ?? ''}
             onChange={(e) => setUserId(e.target.value ? Number(e.target.value) : null)}
             disabled={!enablePersonalization || users.length === 0}
             className="h-7 rounded-notion border border-notion-border bg-notion-bg px-2 text-xs text-notion-text outline-none focus:border-notion-accent disabled:opacity-50"
           >
-            {users.length === 0 && <option value="">— нет —</option>}
+            {users.length === 0 && <option value="">{t('preview.noUsers')}</option>}
             {users.map((u) => (
               <option key={u.user_id} value={u.user_id}>
-                {u.username} · {roleShort(u.role)}
+                {u.username} · {t(`role.short.${u.role}`)}
                 {u.specialization ? ` · ${u.specialization}` : ''}
               </option>
             ))}
@@ -176,12 +176,12 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
             checked={enablePersonalization}
             onCheckedChange={setEnablePersonalization}
           />
-          <span>Персонализация</span>
+          <span>{t('preview.personalization')}</span>
         </label>
         {baselineWeights && (
           <label className="flex items-center gap-2 text-notion-text-secondary">
             <Switch checked={showBaseline} onCheckedChange={setShowBaseline} />
-            <span>Сравнить с последним сохранением</span>
+            <span>{t('preview.compareLatest')}</span>
           </label>
         )}
       </div>
@@ -194,7 +194,7 @@ export function TestPreview({ currentWeights, baselineWeights }: TestPreviewProp
 
       {touched && !isLoading && results && results.length === 0 && (
         <div className="mt-4 rounded-notion border border-notion-border bg-notion-bg-secondary p-4 text-center text-sm text-notion-text-secondary">
-          Ничего не найдено
+          {t('preview.notFound')}
         </div>
       )}
 
@@ -230,6 +230,7 @@ function ResultCard({
   onToggle: () => void;
   showBaselineBadge: boolean;
 }) {
+  const { t } = useTranslation();
   const r = entry.doc;
   return (
     <li className="rounded-notion border border-notion-border bg-notion-bg-secondary">
@@ -243,7 +244,7 @@ function ResultCard({
             <PositionChip n={r.position} size="sm" />
             {showBaselineBadge && <DeltaBadge delta={entry.delta ?? null} />}
             <h3 className="truncate text-sm font-medium text-notion-text">
-              {r.title || 'Без названия'}
+              {r.title || t('preview.untitled')}
             </h3>
           </div>
           {r.authors && (
@@ -272,13 +273,14 @@ function ResultCard({
 }
 
 function DeltaBadge({ delta }: { delta: number | null }) {
+  const { t } = useTranslation();
   if (delta === null) {
     return (
       <span
         className="inline-flex h-5 items-center gap-0.5 rounded-notion bg-emerald-50 px-1.5 text-[10px] font-medium text-emerald-700"
-        title="Этого документа не было в Top-5 baseline"
+        title={t('preview.notInBaseline')}
       >
-        новый
+        {t('preview.deltaNew')}
       </span>
     );
   }
@@ -286,7 +288,7 @@ function DeltaBadge({ delta }: { delta: number | null }) {
     return (
       <span
         className="inline-flex h-5 items-center gap-0.5 rounded-notion bg-notion-bg-secondary px-1 text-[10px] tabular-nums text-notion-text-tertiary"
-        title="Позиция не изменилась"
+        title={t('preview.deltaSame')}
       >
         <Minus className="h-3 w-3" />0
       </span>
@@ -296,7 +298,7 @@ function DeltaBadge({ delta }: { delta: number | null }) {
     return (
       <span
         className="inline-flex h-5 items-center gap-0.5 rounded-notion bg-emerald-50 px-1 text-[10px] font-medium tabular-nums text-emerald-700"
-        title={`Поднялся на ${delta} позиций`}
+        title={t('preview.deltaUp', { n: delta })}
       >
         <ArrowUp className="h-3 w-3" />
         {delta}
@@ -306,20 +308,10 @@ function DeltaBadge({ delta }: { delta: number | null }) {
   return (
     <span
       className="inline-flex h-5 items-center gap-0.5 rounded-notion bg-amber-50 px-1 text-[10px] font-medium tabular-nums text-amber-700"
-      title={`Опустился на ${Math.abs(delta)} позиций`}
+      title={t('preview.deltaDown', { n: Math.abs(delta) })}
     >
       <ArrowDown className="h-3 w-3" />
       {Math.abs(delta)}
     </span>
   );
-}
-
-function roleShort(role: string): string {
-  switch (role) {
-    case 'bachelor': return 'бак.';
-    case 'master': return 'маг.';
-    case 'phd': return 'асп.';
-    case 'professor': return 'преп.';
-    default: return role;
-  }
 }

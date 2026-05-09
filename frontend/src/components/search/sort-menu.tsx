@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, Check, ChevronDown } from 'lucide-react';
 import type { SortBy } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface SortMenuProps {
   value: SortBy;
   onChange: (next: SortBy) => void;
 }
 
-const OPTIONS: { value: SortBy; label: string }[] = [
-  { value: 'relevance', label: 'По релевантности' },
-  { value: 'popularity_desc', label: 'По популярности' },
-  { value: 'year_desc', label: 'Год: сначала новые' },
-  { value: 'year_asc', label: 'Год: сначала старые' },
-  { value: 'title_asc', label: 'По названию (А–Я)' },
+const OPTIONS: { value: SortBy; key: string }[] = [
+  { value: 'relevance', key: 'sort.relevance' },
+  { value: 'popularity_desc', key: 'sort.popularity' },
+  { value: 'year_desc', key: 'sort.yearDesc' },
+  { value: 'year_asc', key: 'sort.yearAsc' },
+  { value: 'title_asc', key: 'sort.title' },
 ];
 
 export function SortMenu({ value, onChange }: SortMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const current = OPTIONS.find((o) => o.value === value) ?? OPTIONS[0];
 
@@ -47,7 +49,7 @@ export function SortMenu({ value, onChange }: SortMenuProps) {
         className="inline-flex h-8 items-center gap-1.5 rounded-notion border border-notion-border bg-notion-bg px-2.5 text-xs text-notion-text transition-colors hover:bg-notion-bg-hover"
       >
         <ArrowUpDown className="h-3.5 w-3.5 text-notion-text-tertiary" />
-        <span>{current.label}</span>
+        <span>{t(current.key)}</span>
         <ChevronDown className="h-3.5 w-3.5 text-notion-text-tertiary" />
       </button>
 
@@ -72,7 +74,7 @@ export function SortMenu({ value, onChange }: SortMenuProps) {
                   selected ? 'text-notion-text' : 'text-notion-text-secondary'
                 }`}
               >
-                <span>{opt.label}</span>
+                <span>{t(opt.key)}</span>
                 {selected && <Check className="h-3.5 w-3.5 text-notion-text" />}
               </button>
             );

@@ -2,6 +2,7 @@ import { useState, useId } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import FilterPanel from '@/components/filter-panel';
 import { countActiveFilters } from '@/hooks/use-filters';
+import { useTranslation } from '@/lib/i18n';
 import type { Filters } from '@/hooks/use-filters';
 import type { SearchField } from '@/lib/types';
 
@@ -21,6 +22,7 @@ export function MobileFilterToggle({
   const [open, setOpen] = useState(false);
   const totalSelected = countActiveFilters(filters);
   const panelId = useId();
+  const { t } = useTranslation();
 
   return (
     <div className="lg:hidden">
@@ -32,7 +34,7 @@ export function MobileFilterToggle({
         className="inline-flex h-9 items-center gap-2 rounded-notion border border-notion-border bg-notion-bg px-3 text-sm font-medium text-notion-text transition-colors hover:bg-notion-bg-hover"
       >
         <SlidersHorizontal className="h-4 w-4 text-notion-text-tertiary" />
-        Фильтры
+        {t('filters.title')}
         {totalSelected > 0 && (
           <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-notion bg-notion-bg-secondary px-1.5 text-[11px] tabular-nums text-notion-text-secondary">
             {totalSelected}
